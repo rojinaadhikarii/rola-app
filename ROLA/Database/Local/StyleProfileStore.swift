@@ -51,6 +51,95 @@ final class StyleProfileStore {
         contactProfiles.first { $0.chatId == chatId }
     }
 
+    func applyLearning(
+        feedback: UserFeedback,
+        displayName: String,
+        isGroup: Bool
+    ) {
+        guard LearningEngine.shouldLearn(from: feedback.action) else { return }
+
+        if var result = analysisResult {
+            result = applyLearningToResult(
+                result,
+                feedback: feedback,
+                displayName: displayName,
+                isGroup: isGroup
+            )
+            analysisResult = result
+            lastAnalyzedAt = result.analyzedAt
+            saveToCache()
+            return
+        }
+
+        let contact = LearningEngine.newContactProfile(
+            chatId: feedback.chatId,
+            displayName: displayName,
+            isGroup: isGroup,
+            finalText: feedback.finalText
+        )
+        let result = StyleAnalysisResult(
+            globalProfile: LearningEngine.updatedGlobalProfile(
+                .global(traits: contact.traits),
+                finalText: feedback.finalText
+            ),
+            contactProfiles: [contact],
+            analyzedAt: Date(),
+            totalMessagesAnalyzed: 1
+        )
+        analysisResult = result
+        lastAnalyzedAt = result.analyzedAt
+        saveToCache()
+    }
+
+    func mergeRemoteProfiles(_ remoteProfiles: [RemoteStyleProfile]) {
+        guard !remoteProfiles.isEmpty else { return }
+
+        var global = analysisResult?.globalProfile
+        var contactMap = Dictionary(
+            uniqueKeysWithValues: (analysisResult?.contactProfiles ?? []).compactMap { profile -> (String, StyleProfile)? in
+                guard let chatId = profile.chatId else { return nil }
+                return (ContactHasher.hash(chatId: chatId), profile)
+            }
+        )
+
+        for remote in remoteProfiles {
+            if remote.scope == "global" {
+                if let existing = global {
+                    if remote.updatedAt > existing.analyzedAt {
+                        global = StyleProfile.global(traits: remote.traits, analyzedAt: remote.updatedAt)
+                    }
+                } else {
+                    global = StyleProfile.global(traits: remote.traits, analyzedAt: remote.updatedAt)
+                }
+            } else if remote.scope == "contact", let hash = remote.contactHash {
+                if let existing = contactMap[hash] {
+                    if remote.updatedAt > existing.analyzedAt {
+                        contactMap[hash] = StyleProfile(
+                            id: existing.id,
+                            scope: existing.scope,
+                            chatId: existing.chatId,
+                            displayName: existing.displayName,
+                            relationship: existing.relationship,
+                            traits: remote.traits,
+                            analyzedAt: remote.updatedAt
+                        )
+                    }
+                }
+            }
+        }
+
+        guard let global else { return }
+
+        analysisResult = StyleAnalysisResult(
+            globalProfile: global,
+            contactProfiles: Array(contactMap.values),
+            analyzedAt: Date(),
+            totalMessagesAnalyzed: analysisResult?.totalMessagesAnalyzed ?? global.traits.messageCount
+        )
+        lastAnalyzedAt = Date()
+        saveToCache()
+    }
+
     func clear() {
         analysisResult = nil
         lastAnalyzedAt = nil
@@ -59,6 +148,43 @@ final class StyleProfileStore {
     }
 
     // MARK: - Cache
+
+    private func applyLearningToResult(
+        _ result: StyleAnalysisResult,
+        feedback: UserFeedback,
+        displayName: String,
+        isGroup: Bool
+    ) -> StyleAnalysisResult {
+        let updatedGlobal = LearningEngine.updatedGlobalProfile(
+            result.globalProfile,
+            finalText: feedback.finalText
+        )
+
+        var contactProfiles = result.contactProfiles
+        if let index = contactProfiles.firstIndex(where: { $0.chatId == feedback.chatId }) {
+            contactProfiles[index] = LearningEngine.updatedContactProfile(
+                contactProfiles[index],
+                finalText: feedback.finalText
+            )
+        } else {
+            contactProfiles.append(
+                LearningEngine.newContactProfile(
+                    chatId: feedback.chatId,
+                    displayName: displayName,
+                    isGroup: isGroup,
+                    finalText: feedback.finalText
+                )
+            )
+        }
+
+        let totalMessages = result.totalMessagesAnalyzed + 1
+        return StyleAnalysisResult(
+            globalProfile: updatedGlobal,
+            contactProfiles: contactProfiles,
+            analyzedAt: Date(),
+            totalMessagesAnalyzed: totalMessages
+        )
+    }
 
     private func loadFromCache() {
         guard FileManager.default.fileExists(atPath: cacheURL.path) else { return }

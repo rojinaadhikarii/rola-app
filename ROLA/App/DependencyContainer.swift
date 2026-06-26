@@ -12,6 +12,9 @@ final class DependencyContainer: DependencyContainerProtocol {
     let styleProfileStore: StyleProfileStore
     let calendarContextStore: CalendarContextStore
     let suggestionStore: SuggestionStore
+    let feedbackStore: FeedbackStore
+    let syncService: SyncService
+    let learningService: LearningService
     let styleEngine: StyleEngineProtocol
     let aiPipeline: AIPipelineProtocol
     let calendarService: CalendarServiceProtocol
@@ -25,6 +28,9 @@ final class DependencyContainer: DependencyContainerProtocol {
         styleEngine: StyleEngineProtocol? = nil,
         aiPipeline: AIPipelineProtocol? = nil,
         suggestionStore: SuggestionStore? = nil,
+        feedbackStore: FeedbackStore? = nil,
+        syncService: SyncService? = nil,
+        learningService: LearningService? = nil,
         calendarService: CalendarServiceProtocol? = nil,
         contactsService: ContactsServiceProtocol? = nil,
         notificationService: NotificationServiceProtocol? = nil,
@@ -34,7 +40,8 @@ final class DependencyContainer: DependencyContainerProtocol {
         useMockImport: Bool = false,
         useMockStyle: Bool = false,
         useMockCalendar: Bool = false,
-        useMockAI: Bool = false
+        useMockAI: Bool = false,
+        useMockSync: Bool = false
     ) {
         let calendar = calendarService ?? (
             (useMockPermissions || useMockCalendar)
@@ -47,6 +54,7 @@ final class DependencyContainer: DependencyContainerProtocol {
         let style = styleEngine ?? (useMockStyle ? MockStyleEngine() : StyleEngine())
         let keyStore = apiKeyStore
         let suggestions = suggestionStore ?? SuggestionStore()
+        let feedback = feedbackStore ?? FeedbackStore()
 
         self.calendarService = calendar
         self.contactsService = contacts
@@ -57,6 +65,21 @@ final class DependencyContainer: DependencyContainerProtocol {
         self.styleProfileStore = StyleProfileStore(styleEngine: style)
         self.calendarContextStore = CalendarContextStore(calendarService: calendar)
         self.suggestionStore = suggestions
+        self.feedbackStore = feedback
+
+        let resolvedSyncService = syncService ?? SyncService(
+            feedbackStore: feedback,
+            styleProfileStore: self.styleProfileStore
+        )
+        self.syncService = resolvedSyncService
+
+        let syncBackend: SyncServiceProtocol = useMockSync ? MockSyncService() : resolvedSyncService
+        self.learningService = learningService ?? LearningService(
+            feedbackStore: feedback,
+            styleProfileStore: self.styleProfileStore,
+            syncService: syncBackend
+        )
+
         self.aiPipeline = aiPipeline ?? (
             useMockAI
                 ? MockAIPipeline(suggestionStore: suggestions)
@@ -76,6 +99,7 @@ final class DependencyContainer: DependencyContainerProtocol {
         useMockImport: true,
         useMockStyle: true,
         useMockCalendar: true,
-        useMockAI: true
+        useMockAI: true,
+        useMockSync: true
     )
 }

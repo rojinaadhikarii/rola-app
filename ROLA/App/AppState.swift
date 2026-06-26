@@ -69,6 +69,18 @@ final class AppState {
         container.apiKeyStore
     }
 
+    var feedbackStore: FeedbackStore {
+        container.feedbackStore
+    }
+
+    var syncService: SyncService {
+        container.syncService
+    }
+
+    var learningService: LearningService {
+        container.learningService
+    }
+
     // MARK: Init
 
     init(container: DependencyContainer) {

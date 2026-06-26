@@ -327,6 +327,83 @@ final class ROLATests: XCTestCase {
         XCTAssertEqual(store.pendingCount, 1)
     }
 
+    func testLearningEngineBlendsTraits() {
+        let existing = StyleTraits(
+            averageWordCount: 10,
+            averageCharacterCount: 50,
+            emojiRate: 0.1,
+            exclamationRate: 0.1,
+            questionRate: 0.1,
+            lowercaseRate: 0.5,
+            slangRate: 0.1,
+            topWords: ["yeah"],
+            topEmojis: [],
+            commonGreetings: ["hey"],
+            commonSignOffs: ["thanks"],
+            messageCount: 20
+        )
+        let sample = LearningEngine.traits(from: "ok sounds good 😂")
+        let blended = LearningEngine.blend(existing: existing, sample: sample)
+
+        XCTAssertGreaterThan(blended.messageCount, existing.messageCount)
+        XCTAssertFalse(blended.topWords.isEmpty)
+    }
+
+    func testLearningEngineSkipsDismissedActions() {
+        XCTAssertFalse(LearningEngine.shouldLearn(from: .dismissed))
+        XCTAssertTrue(LearningEngine.shouldLearn(from: .approved))
+        XCTAssertTrue(LearningEngine.shouldLearn(from: .edited))
+    }
+
+    func testContactHasherProducesStableHash() {
+        let first = ContactHasher.hash(chatId: 42)
+        let second = ContactHasher.hash(chatId: 42)
+        XCTAssertEqual(first, second)
+        XCTAssertNotEqual(first, ContactHasher.hash(chatId: 43))
+    }
+
+    func testFeedbackStorePersistsAndTracksSync() {
+        let store = FeedbackStore()
+        let feedback = UserFeedback(
+            id: UUID(),
+            suggestionId: UUID(),
+            chatId: 1,
+            originalText: "Sounds good",
+            finalText: "Yeah sounds good!",
+            action: .approved,
+            createdAt: Date()
+        )
+        store.save(feedback)
+        XCTAssertEqual(store.pendingSyncCount, 1)
+        store.markSynced(feedback.id)
+        XCTAssertEqual(store.pendingSyncCount, 0)
+    }
+
+    @MainActor
+    func testStyleProfileStoreAppliesLearning() async {
+        let store = StyleProfileStore(styleEngine: MockStyleEngine())
+        await store.analyze()
+
+        let originalCount = store.globalProfile?.traits.messageCount ?? 0
+        let feedback = UserFeedback(
+            id: UUID(),
+            suggestionId: UUID(),
+            chatId: 1,
+            originalText: "Sure thing",
+            finalText: "yeah definitely down for that 😂",
+            action: .edited,
+            createdAt: Date()
+        )
+
+        store.applyLearning(
+            feedback: feedback,
+            displayName: "Alex Kim",
+            isGroup: false
+        )
+
+        XCTAssertGreaterThan(store.globalProfile?.traits.messageCount ?? 0, originalCount)
+    }
+
     private func fixturePathInRepo() -> String {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

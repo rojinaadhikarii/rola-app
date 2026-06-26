@@ -73,6 +73,9 @@ protocol DependencyContainerProtocol: AnyObject {
     var calendarContextStore: CalendarContextStore { get }
     var aiPipeline: AIPipelineProtocol { get }
     var suggestionStore: SuggestionStore { get }
+    var feedbackStore: FeedbackStore { get }
+    var syncService: SyncService { get }
+    var learningService: LearningService { get }
     var calendarService: CalendarServiceProtocol { get }
     var contactsService: ContactsServiceProtocol { get }
     var notificationService: NotificationServiceProtocol { get }

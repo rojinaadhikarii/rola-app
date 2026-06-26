@@ -10,6 +10,14 @@ struct SettingsView: View {
     @State private var saveMessage: String?
     @State private var saveMessageIsError: Bool = false
 
+    @State private var supabaseURL: String = ""
+    @State private var supabaseAnonKey: String = ""
+    @State private var supabaseEmail: String = ""
+    @State private var supabasePassword: String = ""
+    @State private var cloudMessage: String?
+    @State private var cloudMessageIsError: Bool = false
+    @State private var isCloudBusy: Bool = false
+
     private var apiKeyStore: APIKeyStoreProtocol {
         appState.container.apiKeyStore
     }
@@ -26,6 +34,7 @@ struct SettingsView: View {
                     messagesSection
                     styleSection
                     calendarSection
+                    cloudSyncSection
                     apiKeySection
                     aboutSection
                 }
@@ -34,7 +43,10 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .onAppear(perform: loadExistingKey)
+        .onAppear {
+            loadExistingKey()
+            loadSupabaseConfig()
+        }
     }
 
     private var settingsHeader: some View {
@@ -127,6 +139,16 @@ struct SettingsView: View {
                         .font(Theme.Typography.callout)
                         .foregroundStyle(Theme.Colors.textPrimary)
                 }
+
+                HStack {
+                    Text("Learning events")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text("\(appState.feedbackStore.allFeedback.count)")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                }
             } else {
                 Text("No style profile yet. Import messages to analyze your communication style.")
                     .font(Theme.Typography.callout)
@@ -191,6 +213,117 @@ struct SettingsView: View {
         }
         .padding(Theme.Spacing.lg)
         .rolaCard()
+    }
+
+    private var cloudSyncSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            sectionTitle("Cloud Sync (Supabase)")
+
+            Text("Back up derived style profiles and learning feedback. Raw messages never leave your Mac.")
+                .font(Theme.Typography.callout)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            settingsField("Project URL", text: $supabaseURL, placeholder: "https://xyz.supabase.co")
+            settingsField("Anon Key", text: $supabaseAnonKey, placeholder: "eyJ...", secure: true)
+            settingsField("Email", text: $supabaseEmail, placeholder: "you@example.com")
+            settingsField("Password", text: $supabasePassword, placeholder: "••••••••", secure: true)
+
+            HStack(spacing: Theme.Spacing.sm) {
+                ROLAButton(title: "Save Config", style: .secondary) {
+                    saveSupabaseConfig()
+                }
+                .frame(maxWidth: 130)
+
+                if appState.syncService.isAuthenticated {
+                    ROLAButton(title: "Sync Now", style: .primary, isLoading: isCloudBusy) {
+                        Task { await syncNow() }
+                    }
+                    .frame(maxWidth: 120)
+
+                    ROLAButton(title: "Sign Out", style: .secondary) {
+                        appState.syncService.signOut()
+                        showCloudMessage("Signed out of Supabase.", isError: false)
+                    }
+                    .frame(maxWidth: 100)
+                } else {
+                    ROLAButton(title: "Sign In", style: .primary, isLoading: isCloudBusy) {
+                        Task { await signInToSupabase() }
+                    }
+                    .frame(maxWidth: 100)
+
+                    ROLAButton(title: "Sign Up", style: .secondary, isLoading: isCloudBusy) {
+                        Task { await signUpToSupabase() }
+                    }
+                    .frame(maxWidth: 100)
+                }
+            }
+
+            HStack {
+                Text("Status")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                Spacer()
+                Text(appState.syncService.status.label)
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .multilineTextAlignment(.trailing)
+            }
+
+            if appState.feedbackStore.pendingSyncCount > 0 {
+                HStack {
+                    Text("Pending upload")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text("\(appState.feedbackStore.pendingSyncCount) events")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.warning)
+                }
+            }
+
+            if let cloudMessage {
+                Text(cloudMessage)
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(cloudMessageIsError ? Theme.Colors.error : Theme.Colors.success)
+            }
+
+            Link("Set up Supabase →", destination: URL(string: "https://supabase.com/dashboard")!)
+                .font(Theme.Typography.caption)
+                .foregroundStyle(Theme.Colors.accent)
+        }
+        .padding(Theme.Spacing.lg)
+        .rolaCard()
+    }
+
+    private func settingsField(
+        _ label: String,
+        text: Binding<String>,
+        placeholder: String,
+        secure: Bool = false
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            Text(label)
+                .font(Theme.Typography.caption)
+                .foregroundStyle(Theme.Colors.textTertiary)
+
+            Group {
+                if secure {
+                    SecureField(placeholder, text: text)
+                } else {
+                    TextField(placeholder, text: text)
+                }
+            }
+            .textFieldStyle(.plain)
+            .font(Theme.Typography.body)
+            .padding(Theme.Spacing.md)
+            .background(Theme.Colors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous)
+                    .stroke(Theme.Colors.border, lineWidth: 1)
+            )
+        }
     }
 
     private var apiKeySection: some View {
@@ -266,7 +399,7 @@ struct SettingsView: View {
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Spacer()
-                Text("0.6.0 (Milestone 6)")
+                Text("0.7.0 (Milestone 7)")
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textPrimary)
             }
@@ -330,6 +463,72 @@ struct SettingsView: View {
     private func showMessage(_ message: String, isError: Bool) {
         saveMessage = message
         saveMessageIsError = isError
+    }
+
+    private func loadSupabaseConfig() {
+        if let config = appState.syncService.loadConfig() {
+            supabaseURL = config.projectURL
+            supabaseAnonKey = config.anonKey
+        }
+    }
+
+    private func saveSupabaseConfig() {
+        let config = SupabaseConfig(
+            projectURL: supabaseURL.trimmingCharacters(in: .whitespacesAndNewlines),
+            anonKey: supabaseAnonKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        guard config.isConfigured else {
+            showCloudMessage("Enter both project URL and anon key.", isError: true)
+            return
+        }
+        appState.syncService.saveConfig(config)
+        showCloudMessage("Supabase configuration saved.", isError: false)
+    }
+
+    private func signInToSupabase() async {
+        isCloudBusy = true
+        defer { isCloudBusy = false }
+        saveSupabaseConfig()
+        do {
+            try await appState.syncService.signIn(
+                email: supabaseEmail.trimmingCharacters(in: .whitespacesAndNewlines),
+                password: supabasePassword
+            )
+            showCloudMessage("Signed in and synced.", isError: false)
+        } catch {
+            showCloudMessage(error.localizedDescription, isError: true)
+        }
+    }
+
+    private func signUpToSupabase() async {
+        isCloudBusy = true
+        defer { isCloudBusy = false }
+        saveSupabaseConfig()
+        do {
+            try await appState.syncService.signUp(
+                email: supabaseEmail.trimmingCharacters(in: .whitespacesAndNewlines),
+                password: supabasePassword
+            )
+            showCloudMessage("Account created and synced.", isError: false)
+        } catch {
+            showCloudMessage(error.localizedDescription, isError: true)
+        }
+    }
+
+    private func syncNow() async {
+        isCloudBusy = true
+        defer { isCloudBusy = false }
+        await appState.syncService.syncIfNeeded()
+        if case .failed(let message) = appState.syncService.status {
+            showCloudMessage(message, isError: true)
+        } else {
+            showCloudMessage("Sync complete.", isError: false)
+        }
+    }
+
+    private func showCloudMessage(_ message: String, isError: Bool) {
+        cloudMessage = message
+        cloudMessageIsError = isError
     }
 }
 

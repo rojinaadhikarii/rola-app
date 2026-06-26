@@ -137,59 +137,14 @@ final class AIPipeline: AIPipelineProtocol, @unchecked Sendable {
 
     func approveSuggestion(_ suggestion: ReplySuggestion, editedText: String? = nil) {
         var updated = suggestion
-        let finalText = editedText ?? suggestion.replyText
         updated.status = editedText != nil ? .edited : .approved
         updated.editedText = editedText
         suggestionStore.save(updated)
-
-        logFeedback(
-            suggestion: updated,
-            action: editedText != nil ? .edited : .approved,
-            finalText: finalText
-        )
     }
 
     func dismissSuggestion(_ suggestion: ReplySuggestion) {
         var updated = suggestion
         updated.status = .dismissed
         suggestionStore.save(updated)
-
-        logFeedback(
-            suggestion: updated,
-            action: .dismissed,
-            finalText: suggestion.replyText
-        )
-    }
-
-    private func logFeedback(
-        suggestion: ReplySuggestion,
-        action: SuggestionAction,
-        finalText: String
-    ) {
-        let feedback = UserFeedback(
-            id: UUID(),
-            suggestionId: suggestion.id,
-            chatId: suggestion.chatId,
-            originalText: suggestion.replyText,
-            finalText: finalText,
-            action: action,
-            createdAt: Date()
-        )
-
-        guard let data = try? JSONEncoder().encode(feedback) else { return }
-        let url = feedbackDirectory.appendingPathComponent("\(feedback.id).json")
-        try? data.write(to: url, options: .atomic)
-    }
-
-    private var feedbackDirectory: URL {
-        let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        ).first!
-        let dir = appSupport
-            .appendingPathComponent("com.rola.app", isDirectory: true)
-            .appendingPathComponent("feedback", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir
     }
 }

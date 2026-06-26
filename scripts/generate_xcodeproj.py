@@ -21,6 +21,7 @@ swift_files = [
     "ROLA/Models/StyleProfile.swift",
     "ROLA/Models/CalendarContext.swift",
     "ROLA/Models/ReplySuggestion.swift",
+    "ROLA/Models/SupabaseModels.swift",
     "ROLA/Database/ChatDB/ChatDBError.swift",
     "ROLA/Database/ChatDB/AppleDateConverter.swift",
     "ROLA/Database/ChatDB/AttributedBodyDecoder.swift",
@@ -29,15 +30,22 @@ swift_files = [
     "ROLA/Database/Local/StyleProfileStore.swift",
     "ROLA/Database/Local/CalendarContextStore.swift",
     "ROLA/Database/Local/SuggestionStore.swift",
+    "ROLA/Database/Local/FeedbackStore.swift",
+    "ROLA/Database/Supabase/SupabaseClient.swift",
+    "ROLA/Database/Supabase/SupabaseAuthService.swift",
+    "ROLA/Database/Supabase/SyncService.swift",
     "ROLA/Utilities/Theme.swift",
     "ROLA/Utilities/KeychainHelper.swift",
     "ROLA/Utilities/PermissionStatusMapper.swift",
     "ROLA/Utilities/PermissionRefreshObserver.swift",
+    "ROLA/Utilities/ContactHasher.swift",
     "ROLA/Services/Protocols/ServiceProtocols.swift",
     "ROLA/Services/Mock/MockServices.swift",
     "ROLA/Services/MessageImport/MessageImportService.swift",
     "ROLA/Services/StyleAnalysis/StyleAnalyzer.swift",
     "ROLA/Services/StyleAnalysis/StyleEngine.swift",
+    "ROLA/Services/Learning/LearningEngine.swift",
+    "ROLA/Services/Learning/LearningService.swift",
     "ROLA/Services/Contacts/ContactsService.swift",
     "ROLA/Services/Calendar/CalendarService.swift",
     "ROLA/Services/Calendar/AvailabilityChecker.swift",
@@ -119,9 +127,11 @@ subgroups = {
     "Mock": gen_id(),
     "MessageImport": gen_id(),
     "StyleAnalysis": gen_id(),
+    "Learning": gen_id(),
     "Database": gen_id(),
     "ChatDB": gen_id(),
     "Local": gen_id(),
+    "Supabase": gen_id(),
     "Context": gen_id(),
     "Pipeline": gen_id(),
     "Prompts": gen_id(),
@@ -240,12 +250,17 @@ models_children = [file_refs[f] for f in swift_files if "/Models/" in f]
 utils_children = [file_refs[f] for f in swift_files if "/Utilities/" in f]
 chatdb_children = [file_refs[f] for f in swift_files if "/Database/ChatDB/" in f]
 local_children = [file_refs[f] for f in swift_files if "/Database/Local/" in f]
+supabase_children = [file_refs[f] for f in swift_files if "/Database/Supabase/" in f]
 protocols_children = [file_refs["ROLA/Services/Protocols/ServiceProtocols.swift"]]
 mock_children = [file_refs["ROLA/Services/Mock/MockServices.swift"]]
 message_import_children = [file_refs["ROLA/Services/MessageImport/MessageImportService.swift"]]
 style_analysis_children = [
     file_refs["ROLA/Services/StyleAnalysis/StyleAnalyzer.swift"],
     file_refs["ROLA/Services/StyleAnalysis/StyleEngine.swift"],
+]
+learning_children = [
+    file_refs["ROLA/Services/Learning/LearningEngine.swift"],
+    file_refs["ROLA/Services/Learning/LearningService.swift"],
 ]
 perms_children = [file_refs[f] for f in swift_files if "/Permissions/" in f]
 vm_children = [file_refs[f] for f in swift_files if "/ViewModels/" in f]
@@ -272,6 +287,7 @@ for name, gid, children, path in [
     ("Notifications", subgroups["Notifications"], notifications_children, "Notifications"),
     ("MessageImport", subgroups["MessageImport"], message_import_children, "MessageImport"),
     ("StyleAnalysis", subgroups["StyleAnalysis"], style_analysis_children, "StyleAnalysis"),
+    ("Learning", subgroups["Learning"], learning_children, "Learning"),
 ]:
     out.extend(group_block(gid, name, children, path))
 
@@ -294,10 +310,11 @@ out.extend(group_block(subgroups["AI"], "AI", ai_leaf_children, "AI"))
 for name, gid, children, path in [
     ("ChatDB", subgroups["ChatDB"], chatdb_children, "ChatDB"),
     ("Local", subgroups["Local"], local_children, "Local"),
+    ("Supabase", subgroups["Supabase"], supabase_children, "Supabase"),
 ]:
     out.extend(group_block(gid, name, children, path))
 
-database_children = [subgroups["ChatDB"], subgroups["Local"]]
+database_children = [subgroups["ChatDB"], subgroups["Local"], subgroups["Supabase"]]
 out.extend(group_block(subgroups["Database"], "Database", database_children, "Database"))
 
 for name, gid, children, path in [
@@ -320,6 +337,7 @@ services_children = [
     subgroups["Mock"],
     subgroups["MessageImport"],
     subgroups["StyleAnalysis"],
+    subgroups["Learning"],
     subgroups["Contacts"],
     subgroups["Calendar"],
     subgroups["Notifications"],
@@ -542,7 +560,7 @@ target_debug = [
     "INFOPLIST_KEY_NSContactsUsageDescription = \"ROLA uses your contacts to match messages with people you know.\";",
     "INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = \"ROLA reads your calendar to suggest replies based on your availability.\";",
     "LD_RUNPATH_SEARCH_PATHS = (\"$(inherited)\", \"@executable_path/../Frameworks\");",
-    "MARKETING_VERSION = 0.6.0;",
+    "MARKETING_VERSION = 0.7.0;",
     "PRODUCT_BUNDLE_IDENTIFIER = com.rola.app;",
     "PRODUCT_NAME = \"$(TARGET_NAME)\";",
     "SWIFT_EMIT_LOC_STRINGS = YES;",
@@ -558,7 +576,7 @@ test_debug = [
     "CODE_SIGN_STYLE = Automatic;",
     "CURRENT_PROJECT_VERSION = 1;",
     "GENERATE_INFOPLIST_FILE = YES;",
-    "MARKETING_VERSION = 0.6.0;",
+    "MARKETING_VERSION = 0.7.0;",
     "PRODUCT_BUNDLE_IDENTIFIER = com.rola.app.tests;",
     "PRODUCT_NAME = \"$(TARGET_NAME)\";",
     "SWIFT_VERSION = 6.0;",

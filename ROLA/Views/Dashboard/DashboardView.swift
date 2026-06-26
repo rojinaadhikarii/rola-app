@@ -32,6 +32,7 @@ struct DashboardView: View {
                 )
                 suggestionViewModel = SuggestionViewModel(
                     aiPipeline: appState.aiPipeline,
+                    learningService: appState.learningService,
                     suggestionStore: appState.suggestionStore,
                     styleProfileStore: styleStore,
                     calendarContextStore: calendarStore

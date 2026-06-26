@@ -16,6 +16,16 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 7 — What's Included
+
+- **Learning loop** — approved/edited replies incrementally update global and per-contact style profiles
+- **Feedback store** — unified local persistence with sync tracking (migrates M6 per-file feedback)
+- **Contact hashing** — SHA-256 hashes for chat IDs before any cloud upload
+- **Supabase client** — lightweight REST auth + PostgREST sync (no SDK dependency)
+- **Cloud sync** — push style profiles and feedback events when signed in
+- **Settings UI** — configure Supabase project, sign in/up, manual sync
+- **SQL schema** — `docs/supabase/schema.sql` with RLS policies
+
 ## Milestone 6 — What's Included
 
 - **AI pipeline** — classify → safety → context → generate → safety → present
@@ -109,8 +119,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 | M3 — iMessage import | ✅ Complete |
 | M4 — Style analysis | ✅ Complete |
 | M5 — Calendar integration | ✅ Complete |
-| M6 — AI pipeline | ✅ Current |
-| M7 — Learning + Supabase | Planned |
+| M6 — AI pipeline | ✅ Complete |
+| M7 — Learning + Supabase | ✅ Current |
 | M8 — Polish + notifications | Planned |
 
 ## Regenerating the Xcode Project

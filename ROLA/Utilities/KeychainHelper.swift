@@ -8,6 +8,7 @@ enum KeychainHelper {
 
   enum Key: String {
     case openAIAPIKey = "com.rola.app.openai-api-key"
+    case supabaseSession = "com.rola.app.supabase-session"
   }
 
   enum KeychainError: LocalizedError {
@@ -76,6 +77,41 @@ enum KeychainHelper {
   }
 
   static func hasValue(for key: Key) -> Bool {
-    load(for: key) != nil
+    load(for: key) != nil || loadData(for: key) != nil
+  }
+
+  static func saveData(_ data: Data, for key: Key) throws {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: key.rawValue,
+      kSecAttrService as String: "com.rola.app",
+      kSecValueData as String: data,
+    ]
+
+    SecItemDelete(query as CFDictionary)
+
+    let status = SecItemAdd(query as CFDictionary, nil)
+    guard status == errSecSuccess else {
+      throw KeychainError.unexpectedStatus(status)
+    }
+  }
+
+  static func loadData(for key: Key) -> Data? {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: key.rawValue,
+      kSecAttrService as String: "com.rola.app",
+      kSecReturnData as String: true,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+    ]
+
+    var result: AnyObject?
+    let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+    guard status == errSecSuccess, let data = result as? Data else {
+      return nil
+    }
+
+    return data
   }
 }
