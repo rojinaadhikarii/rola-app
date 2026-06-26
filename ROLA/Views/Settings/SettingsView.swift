@@ -123,7 +123,7 @@ struct SettingsView: View {
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Spacer()
-                Text("0.1.0 (Milestone 1)")
+                Text("0.2.0 (Milestone 2)")
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textPrimary)
             }

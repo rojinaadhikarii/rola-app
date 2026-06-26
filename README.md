@@ -16,6 +16,16 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 2 — What's Included
+
+- **Full Disk Access detection** — probes iMessage `chat.db` readability
+- **Contacts** — `CNContactStore` request + status
+- **Calendar** — `EKEventStore` full access request + status
+- **Notifications** — `UNUserNotificationCenter` request + status
+- **Live refresh** — permission status updates when returning from System Settings
+- **FDA guide sheet** — step-by-step instructions with deep link to System Settings
+- Sandbox entitlements + privacy usage descriptions
+
 ## Milestone 1 — What's Included
 
 - Native SwiftUI macOS app shell (`com.rola.app`)
@@ -57,8 +67,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 
 | Milestone | Status |
 |-----------|--------|
-| M1 — App shell + onboarding UI | ✅ Current |
-| M2 — Real permissions | Planned |
+| M1 — App shell + onboarding UI | ✅ Complete |
+| M2 — Real permissions | ✅ Current |
 | M3 — iMessage import | Planned |
 | M4 — Style analysis | Planned |
 | M5 — Calendar integration | Planned |

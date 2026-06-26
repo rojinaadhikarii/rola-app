@@ -16,19 +16,23 @@ struct MockAIPipeline: AIPipelineProtocol {
     }
 }
 
-struct MockCalendarService: CalendarServiceProtocol {
+@MainActor
+final class MockCalendarService: CalendarServiceProtocol {
     func requestAccess() async -> PermissionStatus { .notDetermined }
     func authorizationStatus() -> PermissionStatus { .notDetermined }
 }
 
-struct MockContactsService: ContactsServiceProtocol {
+@MainActor
+final class MockContactsService: ContactsServiceProtocol {
     func requestAccess() async -> PermissionStatus { .notDetermined }
     func authorizationStatus() -> PermissionStatus { .notDetermined }
 }
 
-struct MockNotificationService: NotificationServiceProtocol {
+@MainActor
+final class MockNotificationService: NotificationServiceProtocol {
     func requestAccess() async -> PermissionStatus { .notDetermined }
     func authorizationStatus() -> PermissionStatus { .notDetermined }
+    func refreshAuthorizationStatus() async -> PermissionStatus { .notDetermined }
 }
 
 // MARK: - Keychain API Key Store

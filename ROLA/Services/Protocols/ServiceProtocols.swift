@@ -14,26 +14,32 @@ protocol AIPipelineProtocol: Sendable {
     func generateSuggestion(for messageID: String) async throws -> String
 }
 
-protocol CalendarServiceProtocol: Sendable {
+@MainActor
+protocol CalendarServiceProtocol: AnyObject {
     func requestAccess() async -> PermissionStatus
     func authorizationStatus() -> PermissionStatus
 }
 
-protocol ContactsServiceProtocol: Sendable {
+@MainActor
+protocol ContactsServiceProtocol: AnyObject {
     func requestAccess() async -> PermissionStatus
     func authorizationStatus() -> PermissionStatus
 }
 
-protocol NotificationServiceProtocol: Sendable {
+@MainActor
+protocol NotificationServiceProtocol: AnyObject {
     func requestAccess() async -> PermissionStatus
     func authorizationStatus() -> PermissionStatus
+    func refreshAuthorizationStatus() async -> PermissionStatus
 }
 
-protocol PermissionManagerProtocol: Sendable {
+@MainActor
+protocol PermissionManagerProtocol: AnyObject {
     func status(for permission: PermissionType) -> PermissionStatus
     func request(_ permission: PermissionType) async -> PermissionStatus
     func openSystemSettings(for permission: PermissionType)
-    func refreshAllStatuses()
+    func refreshAllStatuses() async
+    var hasPromptedFullDiskAccess: Bool { get }
 }
 
 protocol APIKeyStoreProtocol: Sendable {

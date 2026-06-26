@@ -6,6 +6,7 @@ struct PermissionCard: View {
     let permission: PermissionType
     let status: PermissionStatus
     var isLoading: Bool = false
+    var showOpenSettingsAction: Bool = false
     let onRequest: () -> Void
     let onOpenSettings: () -> Void
 
@@ -75,25 +76,34 @@ struct PermissionCard: View {
             .foregroundStyle(Theme.Colors.accent)
 
         case .notDetermined:
-            Button {
-                onRequest()
-            } label: {
-                Group {
-                    if isLoading {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Text(permission == .fullDiskAccess ? "Set Up" : "Allow")
-                            .font(Theme.Typography.caption)
-                    }
+            if showOpenSettingsAction {
+                Button("Open Settings") {
+                    onOpenSettings()
                 }
-                .frame(width: 64, height: 28)
+                .buttonStyle(.plain)
+                .font(Theme.Typography.caption)
+                .foregroundStyle(Theme.Colors.accent)
+            } else {
+                Button {
+                    onRequest()
+                } label: {
+                    Group {
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Text(permission == .fullDiskAccess ? "Set Up" : "Allow")
+                                .font(Theme.Typography.caption)
+                        }
+                    }
+                    .frame(width: 64, height: 28)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .background(Theme.Colors.accent)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm, style: .continuous))
+                .disabled(isLoading)
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(Theme.Colors.textPrimary)
-            .background(Theme.Colors.accent)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.sm, style: .continuous))
-            .disabled(isLoading)
         }
     }
 }

@@ -18,14 +18,22 @@ swift_files = [
     "ROLA/Models/AppRoute.swift",
     "ROLA/Utilities/Theme.swift",
     "ROLA/Utilities/KeychainHelper.swift",
+    "ROLA/Utilities/PermissionStatusMapper.swift",
+    "ROLA/Utilities/PermissionRefreshObserver.swift",
     "ROLA/Services/Protocols/ServiceProtocols.swift",
     "ROLA/Services/Mock/MockServices.swift",
+    "ROLA/Services/Contacts/ContactsService.swift",
+    "ROLA/Services/Calendar/CalendarService.swift",
+    "ROLA/Services/Notifications/NotificationService.swift",
     "ROLA/Permissions/PermissionManager.swift",
+    "ROLA/Permissions/FullDiskAccessChecker.swift",
+    "ROLA/Permissions/SystemSettingsURLs.swift",
     "ROLA/ViewModels/OnboardingViewModel.swift",
     "ROLA/Components/ROLAButton.swift",
     "ROLA/Components/PageIndicator.swift",
     "ROLA/Components/EmptyStateView.swift",
     "ROLA/Components/PermissionCard.swift",
+    "ROLA/Components/FullDiskAccessGuideSheet.swift",
     "ROLA/Components/ROLALogoMark.swift",
     "ROLA/Views/Onboarding/OnboardingContainerView.swift",
     "ROLA/Views/Onboarding/WelcomeView.swift",
@@ -78,6 +86,9 @@ subgroups = {
     "Services": gen_id(),
     "Protocols": gen_id(),
     "Mock": gen_id(),
+    "Contacts": gen_id(),
+    "Calendar": gen_id(),
+    "Notifications": gen_id(),
     "Permissions": gen_id(),
     "ViewModels": gen_id(),
     "Components": gen_id(),
@@ -188,9 +199,20 @@ models_children = [file_refs[f] for f in swift_files if "/Models/" in f]
 utils_children = [file_refs[f] for f in swift_files if "/Utilities/" in f]
 protocols_children = [file_refs["ROLA/Services/Protocols/ServiceProtocols.swift"]]
 mock_children = [file_refs["ROLA/Services/Mock/MockServices.swift"]]
-perms_children = [file_refs["ROLA/Permissions/PermissionManager.swift"]]
+perms_children = [file_refs[f] for f in swift_files if "/Permissions/" in f]
 vm_children = [file_refs["ROLA/ViewModels/OnboardingViewModel.swift"]]
 comp_children = [file_refs[f] for f in swift_files if "/Components/" in f]
+
+contacts_children = [file_refs["ROLA/Services/Contacts/ContactsService.swift"]]
+calendar_children = [file_refs["ROLA/Services/Calendar/CalendarService.swift"]]
+notifications_children = [file_refs["ROLA/Services/Notifications/NotificationService.swift"]]
+
+for name, gid, children, path in [
+    ("Contacts", subgroups["Contacts"], contacts_children, "Contacts"),
+    ("Calendar", subgroups["Calendar"], calendar_children, "Calendar"),
+    ("Notifications", subgroups["Notifications"], notifications_children, "Notifications"),
+]:
+    out.extend(group_block(gid, name, children, path))
 
 for name, gid, children, path in [
     ("Onboarding", subgroups["Onboarding"], onboarding_children, "Onboarding"),
@@ -207,7 +229,13 @@ for name, gid, children, path in [
 ]:
     out.extend(group_block(gid, name, children, path))
 
-services_children = [subgroups["Protocols"], subgroups["Mock"]]
+services_children = [
+    subgroups["Protocols"],
+    subgroups["Mock"],
+    subgroups["Contacts"],
+    subgroups["Calendar"],
+    subgroups["Notifications"],
+]
 out.extend(group_block(subgroups["Services"], "Services", services_children, "Services"))
 
 views_children = [subgroups["Onboarding"], subgroups["Dashboard"], subgroups["Settings"]]
@@ -421,6 +449,8 @@ target_debug = [
     "INFOPLIST_KEY_CFBundleDisplayName = ROLA;",
     "INFOPLIST_KEY_LSApplicationCategoryType = \"public.app-category.productivity\";",
     "INFOPLIST_KEY_NSHumanReadableCopyright = \"Copyright © 2026 ROLA. All rights reserved.\";",
+    "INFOPLIST_KEY_NSContactsUsageDescription = \"ROLA uses your contacts to match messages with people you know.\";",
+    "INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = \"ROLA reads your calendar to suggest replies based on your availability.\";",
     "LD_RUNPATH_SEARCH_PATHS = (\"$(inherited)\", \"@executable_path/../Frameworks\");",
     "MARKETING_VERSION = 0.1.0;",
     "PRODUCT_BUNDLE_IDENTIFIER = com.rola.app;",

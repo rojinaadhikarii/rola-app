@@ -1,3 +1,5 @@
+import Contacts
+import EventKit
 import XCTest
 @testable import ROLA
 
@@ -18,5 +20,38 @@ final class ROLATests: XCTestCase {
         XCTAssertEqual(KeychainHelper.load(for: .openAIAPIKey), testKey)
         KeychainHelper.delete(for: .openAIAPIKey)
         XCTAssertNil(KeychainHelper.load(for: .openAIAPIKey))
+    }
+
+    func testContactsAuthorizationMapping() {
+        XCTAssertEqual(PermissionStatusMapper.from(contacts: .authorized), .granted)
+        XCTAssertEqual(PermissionStatusMapper.from(contacts: .denied), .denied)
+        XCTAssertEqual(PermissionStatusMapper.from(contacts: .notDetermined), .notDetermined)
+    }
+
+    func testCalendarAuthorizationMapping() {
+        XCTAssertEqual(PermissionStatusMapper.from(calendar: .fullAccess), .granted)
+        XCTAssertEqual(PermissionStatusMapper.from(calendar: .writeOnly), .denied)
+        XCTAssertEqual(PermissionStatusMapper.from(calendar: .notDetermined), .notDetermined)
+    }
+
+    func testFullDiskAccessCheckerWithMissingFile() {
+        let missingPath = "/tmp/rola-nonexistent-chat-\(UUID().uuidString).db"
+        XCTAssertFalse(FullDiskAccessChecker.canReadMessagesDatabase(at: missingPath))
+    }
+
+    @MainActor
+    func testPermissionManagerRefreshUsesServices() async {
+        let contacts = MockContactsService()
+        let calendar = MockCalendarService()
+        let notifications = MockNotificationService()
+        let manager = PermissionManager(
+            contactsService: contacts,
+            calendarService: calendar,
+            notificationService: notifications
+        )
+
+        await manager.refreshAllStatuses()
+        XCTAssertEqual(manager.status(for: .contacts), .notDetermined)
+        XCTAssertEqual(manager.status(for: .calendar), .notDetermined)
     }
 }

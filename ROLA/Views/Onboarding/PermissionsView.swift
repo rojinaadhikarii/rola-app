@@ -5,6 +5,7 @@ import SwiftUI
 struct PermissionsView: View {
   @Bindable var viewModel: OnboardingViewModel
   @Environment(AppState.self) private var appState
+  @State private var showFullDiskAccessGuide = false
 
   var body: some View {
     VStack(spacing: 0) {
@@ -29,10 +30,9 @@ struct PermissionsView: View {
               permission: permission,
               status: viewModel.permissionStatuses[permission] ?? .notDetermined,
               isLoading: viewModel.isRequestingPermission == permission,
+              showOpenSettingsAction: viewModel.shouldShowOpenSettings(for: permission),
               onRequest: {
-                Task {
-                  await viewModel.requestPermission(permission)
-                }
+                handlePermissionRequest(permission)
               },
               onOpenSettings: {
                 viewModel.openSystemSettings(for: permission)
@@ -46,8 +46,8 @@ struct PermissionsView: View {
       Spacer()
 
       VStack(spacing: Theme.Spacing.md) {
-        if viewModel.permissionStatuses[.fullDiskAccess] != .granted {
-          Text("Full Disk Access must be enabled in System Settings. Click \"Set Up\" for instructions.")
+        if !viewModel.allRequiredPermissionsGranted {
+          Text(requiredPermissionsHint)
             .font(Theme.Typography.caption)
             .foregroundStyle(Theme.Colors.textTertiary)
             .multilineTextAlignment(.center)
@@ -57,7 +57,8 @@ struct PermissionsView: View {
         ROLAButton(
           title: "Import Messages",
           systemImage: "arrow.down.message",
-          isLoading: appState.isImporting
+          isLoading: appState.isImporting,
+          isDisabled: !viewModel.allRequiredPermissionsGranted
         ) {
           Task {
             await viewModel.continueFromPermissions()
@@ -78,8 +79,34 @@ struct PermissionsView: View {
     }
     .frame(maxWidth: 560)
     .frame(maxWidth: .infinity)
-    .onAppear {
-      viewModel.refreshPermissionStatuses()
+    .task {
+      await viewModel.refreshPermissionStatuses()
+    }
+    .sheet(isPresented: $showFullDiskAccessGuide) {
+      FullDiskAccessGuideSheet {
+        viewModel.openSystemSettings(for: .fullDiskAccess)
+      }
+    }
+  }
+
+  private var requiredPermissionsHint: String {
+    if viewModel.permissionStatuses[.fullDiskAccess] != .granted {
+      return "Full Disk Access is required to read iMessage history. Enable it in System Settings."
+    }
+    if viewModel.permissionStatuses[.contacts] != .granted {
+      return "Contacts access is required to match messages with people you know."
+    }
+    return "Grant required permissions to continue."
+  }
+
+  private func handlePermissionRequest(_ permission: PermissionType) {
+    if permission == .fullDiskAccess {
+      showFullDiskAccessGuide = true
+      return
+    }
+
+    Task {
+      await viewModel.requestPermission(permission)
     }
   }
 }
