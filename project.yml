@@ -1,0 +1,46 @@
+name: ROLA
+options:
+  bundleIdPrefix: com.rola
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  ROLA:
+    type: application
+    platform: macOS
+    sources:
+      - path: ROLA
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rola.app
+        PRODUCT_NAME: ROLA
+        INFOPLIST_KEY_CFBundleDisplayName: ROLA
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright © 2026 ROLA. All rights reserved."
+        GENERATE_INFOPLIST_FILE: YES
+        ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    entitlements:
+      path: ROLA/ROLA.entitlements
+
+  ROLATests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: ROLATests
+    dependencies:
+      - target: ROLA
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rola.app.tests
+        GENERATE_INFOPLIST_FILE: YES

@@ -1,0 +1,524 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ED6DFB3808DB4E6D98824748 /* ROLAApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122C326901F44C15879D0A87 /* ROLAApp.swift */; };
+		F4CAA0FC531C4589A5AB86D8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4802ED265CC484ABE8D26AB /* AppState.swift */; };
+		FF322797361845E48C935966 /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EBF3F0E92F94E569DE80B10 /* DependencyContainer.swift */; };
+		38FEE4FCB9784E9C8DB5CF3F /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC8328AAFFC4CDB848E4C67 /* AppRoute.swift */; };
+		1D41D30E75D04542B9C2D8DC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161797DDA9814D378218E4EC /* Theme.swift */; };
+		BEA30E9BA46344EDAD95C8C9 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F767F29EC8740E080051C88 /* KeychainHelper.swift */; };
+		36180FF866A045CE8898CE16 /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67EC489260214C1CB1B5E111 /* ServiceProtocols.swift */; };
+		B406F53D069B44FB8E7820AD /* MockServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7ABD951D72B44F5BBBEBDC1 /* MockServices.swift */; };
+		1346804DC3FC4F81B0A97463 /* PermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC6C23F67C04B50A490744A /* PermissionManager.swift */; };
+		4A85144B9DA243579751A992 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA4145B4970547A196C03139 /* OnboardingViewModel.swift */; };
+		AD79883B6AE74F719C98050E /* ROLAButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0C24DB3CA745ACA0C7F14E /* ROLAButton.swift */; };
+		9E7666BAB750485891B7755E /* PageIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB31741057045C18B623BB9 /* PageIndicator.swift */; };
+		47240B1CCED9436482A0F9E3 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AAD86477824D778D28738E /* EmptyStateView.swift */; };
+		BDC1527E7F484EDE9E2BF34A /* PermissionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B8BD68A7F440C89A8E245B /* PermissionCard.swift */; };
+		C14CE01F77554FBA892837E4 /* ROLALogoMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C56F0D60D14D46A0D29C0B /* ROLALogoMark.swift */; };
+		7009F62A45D649339485E024 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288A7AEE0070427C8F2CD0E2 /* OnboardingContainerView.swift */; };
+		A18B587657E34257A66C57AC /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB93BAB37104591A0FDAC9C /* WelcomeView.swift */; };
+		6EEACC4859CE4BAAB8070CC9 /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F8DAC86600424D97D6F9C2 /* PrivacyView.swift */; };
+		7B161B2F66624D278FF80922 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B41C90480A649F3A1A0E6C8 /* PermissionsView.swift */; };
+		411A0AB9DE1C4D9A9FD38635 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 726CED16FC68488BA84DA9EC /* DashboardView.swift */; };
+		07752B60088148D29ACB2925 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC9B6A4AB83F4AEAA14A67E5 /* SettingsView.swift */; };
+		BCBCB7796A1F4AB09A3B4EBF /* ROLATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E69CAF66F0246449AA4591D /* ROLATests.swift */; };
+		9B3D91F386A2435E8494927D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2549D64FCCD54CC6970D4F01 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		818512044E4643F2871A6D1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F3EFCE5529174FC0801DDA55 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 88D882DE2E40428AA771913B;
+			remoteInfo = ROLA;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		122C326901F44C15879D0A87 /* ROLAApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROLAApp.swift; sourceTree = "<group>"; };
+		C4802ED265CC484ABE8D26AB /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		7EBF3F0E92F94E569DE80B10 /* DependencyContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyContainer.swift; sourceTree = "<group>"; };
+		6AC8328AAFFC4CDB848E4C67 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		161797DDA9814D378218E4EC /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		0F767F29EC8740E080051C88 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		67EC489260214C1CB1B5E111 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
+		C7ABD951D72B44F5BBBEBDC1 /* MockServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockServices.swift; sourceTree = "<group>"; };
+		ACC6C23F67C04B50A490744A /* PermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionManager.swift; sourceTree = "<group>"; };
+		FA4145B4970547A196C03139 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		AB0C24DB3CA745ACA0C7F14E /* ROLAButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROLAButton.swift; sourceTree = "<group>"; };
+		CFB31741057045C18B623BB9 /* PageIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageIndicator.swift; sourceTree = "<group>"; };
+		B2AAD86477824D778D28738E /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		B4B8BD68A7F440C89A8E245B /* PermissionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCard.swift; sourceTree = "<group>"; };
+		E3C56F0D60D14D46A0D29C0B /* ROLALogoMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROLALogoMark.swift; sourceTree = "<group>"; };
+		288A7AEE0070427C8F2CD0E2 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
+		2AB93BAB37104591A0FDAC9C /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		10F8DAC86600424D97D6F9C2 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
+		4B41C90480A649F3A1A0E6C8 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
+		726CED16FC68488BA84DA9EC /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		CC9B6A4AB83F4AEAA14A67E5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		4E69CAF66F0246449AA4591D /* ROLATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ROLATests.swift; sourceTree = "<group>"; };
+		2549D64FCCD54CC6970D4F01 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7DE78EBF6D11422C8BCA9662 /* ROLA.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ROLA.entitlements; sourceTree = "<group>"; };
+		CD048745B2554A43BD41087F /* ROLA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ROLA.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E045B7F3DCC41BC8105C1B6 /* ROLATests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ROLATests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5DA3F7190AE8432D94E6A755 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		32BAF46B8CC041919154EA19 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				FA4145B4970547A196C03139,
+				288A7AEE0070427C8F2CD0E2,
+				2AB93BAB37104591A0FDAC9C,
+				10F8DAC86600424D97D6F9C2,
+				4B41C90480A649F3A1A0E6C8,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		C2AFCBB4E52D4A2E81132A83 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				726CED16FC68488BA84DA9EC,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		DC4C48BCF4A64C2DAEAE4EA8 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				CC9B6A4AB83F4AEAA14A67E5,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		9EA33492BBC84BF6992CC56A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				122C326901F44C15879D0A87,
+				C4802ED265CC484ABE8D26AB,
+				7EBF3F0E92F94E569DE80B10,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		3D63D96927C64355AEB3047C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				6AC8328AAFFC4CDB848E4C67,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CCA7CC044A8B4C36A74E56A4 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				161797DDA9814D378218E4EC,
+				0F767F29EC8740E080051C88,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		010AA796708747E481D3D93D /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				67EC489260214C1CB1B5E111,
+			);
+			path = Protocols;
+			sourceTree = "<group>";
+		};
+		925357EBA48B4B8DA7FD1917 /* Mock */ = {
+			isa = PBXGroup;
+			children = (
+				C7ABD951D72B44F5BBBEBDC1,
+			);
+			path = Mock;
+			sourceTree = "<group>";
+		};
+		E66442A5074745999EB817F3 /* Permissions */ = {
+			isa = PBXGroup;
+			children = (
+				ACC6C23F67C04B50A490744A,
+			);
+			path = Permissions;
+			sourceTree = "<group>";
+		};
+		FDE842EF69C34BEC96334354 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				FA4145B4970547A196C03139,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		2A0F0B403C2141C9AF26B608 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AB0C24DB3CA745ACA0C7F14E,
+				CFB31741057045C18B623BB9,
+				B2AAD86477824D778D28738E,
+				B4B8BD68A7F440C89A8E245B,
+				E3C56F0D60D14D46A0D29C0B,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		63FD429AB24943D586F7C50F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				010AA796708747E481D3D93D,
+				925357EBA48B4B8DA7FD1917,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		CA585A81CE1D455B99A4D0A6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				32BAF46B8CC041919154EA19,
+				C2AFCBB4E52D4A2E81132A83,
+				DC4C48BCF4A64C2DAEAE4EA8,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F59591CAC9EC492FA6CECF92 /* ROLA */ = {
+			isa = PBXGroup;
+			children = (
+				9EA33492BBC84BF6992CC56A,
+				3D63D96927C64355AEB3047C,
+				CCA7CC044A8B4C36A74E56A4,
+				63FD429AB24943D586F7C50F,
+				E66442A5074745999EB817F3,
+				FDE842EF69C34BEC96334354,
+				2A0F0B403C2141C9AF26B608,
+				CA585A81CE1D455B99A4D0A6,
+				2549D64FCCD54CC6970D4F01,
+				7DE78EBF6D11422C8BCA9662,
+			);
+			path = ROLA;
+			sourceTree = "<group>";
+		};
+		7F042A56479F41CA9742D964 /* ROLATests */ = {
+			isa = PBXGroup;
+			children = (
+				4E69CAF66F0246449AA4591D,
+			);
+			path = ROLATests;
+			sourceTree = "<group>";
+		};
+		34054CB5048B4910988ABC66 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CD048745B2554A43BD41087F,
+				8E045B7F3DCC41BC8105C1B6,
+			);
+			sourceTree = "<group>";
+		};
+		B45A310422304C26B3D0A6B1 /*  */ = {
+			isa = PBXGroup;
+			children = (
+				F59591CAC9EC492FA6CECF92,
+				7F042A56479F41CA9742D964,
+				34054CB5048B4910988ABC66,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		88D882DE2E40428AA771913B /* ROLA */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3669818E8F304B01B4C6DF5C /* Build configuration list for PBXNativeTarget "ROLA" */;
+			buildPhases = (
+				9D1B8A6EAB594478B3837910 /* Sources */,
+				5DA3F7190AE8432D94E6A755 /* Frameworks */,
+				B8868EAE47984650B0BB68B8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ROLA;
+			productName = ROLA;
+			productReference = CD048745B2554A43BD41087F /* ROLA.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CF09078467EE457B972D11B9 /* ROLATests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5F278D70808C47B1901860DD /* Build configuration list for PBXNativeTarget "ROLATests" */;
+			buildPhases = (
+				B06B6560CF1F4CDFB01A65AB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DFDDE3211AE3469EB4D612E1 /* PBXTargetDependency */,
+			);
+			name = ROLATests;
+			productName = ROLATests;
+			productReference = 8E045B7F3DCC41BC8105C1B6 /* ROLATests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F3EFCE5529174FC0801DDA55 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					88D882DE2E40428AA771913B = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					CF09078467EE457B972D11B9 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 88D882DE2E40428AA771913B;
+					};
+				};
+			};
+			buildConfigurationList = 807C694859E948EA91103EB2 /* Build configuration list for PBXProject "ROLA" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B45A310422304C26B3D0A6B1;
+			productRefGroup = 34054CB5048B4910988ABC66 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				88D882DE2E40428AA771913B /* ROLA */,
+				CF09078467EE457B972D11B9 /* ROLATests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B8868EAE47984650B0BB68B8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B3D91F386A2435E8494927D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9D1B8A6EAB594478B3837910 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ED6DFB3808DB4E6D98824748 /* ROLAApp.swift in Sources */,
+				F4CAA0FC531C4589A5AB86D8 /* AppState.swift in Sources */,
+				FF322797361845E48C935966 /* DependencyContainer.swift in Sources */,
+				38FEE4FCB9784E9C8DB5CF3F /* AppRoute.swift in Sources */,
+				1D41D30E75D04542B9C2D8DC /* Theme.swift in Sources */,
+				BEA30E9BA46344EDAD95C8C9 /* KeychainHelper.swift in Sources */,
+				36180FF866A045CE8898CE16 /* ServiceProtocols.swift in Sources */,
+				B406F53D069B44FB8E7820AD /* MockServices.swift in Sources */,
+				1346804DC3FC4F81B0A97463 /* PermissionManager.swift in Sources */,
+				4A85144B9DA243579751A992 /* OnboardingViewModel.swift in Sources */,
+				AD79883B6AE74F719C98050E /* ROLAButton.swift in Sources */,
+				9E7666BAB750485891B7755E /* PageIndicator.swift in Sources */,
+				47240B1CCED9436482A0F9E3 /* EmptyStateView.swift in Sources */,
+				BDC1527E7F484EDE9E2BF34A /* PermissionCard.swift in Sources */,
+				C14CE01F77554FBA892837E4 /* ROLALogoMark.swift in Sources */,
+				7009F62A45D649339485E024 /* OnboardingContainerView.swift in Sources */,
+				A18B587657E34257A66C57AC /* WelcomeView.swift in Sources */,
+				6EEACC4859CE4BAAB8070CC9 /* PrivacyView.swift in Sources */,
+				7B161B2F66624D278FF80922 /* PermissionsView.swift in Sources */,
+				411A0AB9DE1C4D9A9FD38635 /* DashboardView.swift in Sources */,
+				07752B60088148D29ACB2925 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B06B6560CF1F4CDFB01A65AB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BCBCB7796A1F4AB09A3B4EBF /* ROLATests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DFDDE3211AE3469EB4D612E1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 88D882DE2E40428AA771913B /* ROLA */;
+			targetProxy = 818512044E4643F2871A6D1A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		5040C82620E14AD4AF6539B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)",);
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		9D8750EE94494916B7C0FB19 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A7C8E5B248604A61907404D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ROLA/ROLA.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ROLA;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 ROLA. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rola.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		E95C6C32FB804324BD7B61EA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ROLA/ROLA.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = ROLA;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 ROLA. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rola.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A7BF7DCABD104FB08F74B9C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rola.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ROLA.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ROLA";
+			};
+			name = Debug;
+		};
+		0D5E69781BC24DF8854CB276 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rola.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ROLA.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ROLA";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		807C694859E948EA91103EB2 /* Build configuration list for PBXNativeTarget "Project" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5040C82620E14AD4AF6539B7 /* Debug */,
+				9D8750EE94494916B7C0FB19 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3669818E8F304B01B4C6DF5C /* Build configuration list for PBXNativeTarget "ROLA" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7C8E5B248604A61907404D5 /* Debug */,
+				E95C6C32FB804324BD7B61EA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5F278D70808C47B1901860DD /* Build configuration list for PBXNativeTarget "ROLATests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7BF7DCABD104FB08F74B9C5 /* Debug */,
+				0D5E69781BC24DF8854CB276 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F3EFCE5529174FC0801DDA55 /* Project object */;
+}
