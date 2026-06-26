@@ -20,6 +20,7 @@ swift_files = [
     "ROLA/Models/ImportedMessage.swift",
     "ROLA/Models/StyleProfile.swift",
     "ROLA/Models/CalendarContext.swift",
+    "ROLA/Models/ReplySuggestion.swift",
     "ROLA/Database/ChatDB/ChatDBError.swift",
     "ROLA/Database/ChatDB/AppleDateConverter.swift",
     "ROLA/Database/ChatDB/AttributedBodyDecoder.swift",
@@ -27,6 +28,7 @@ swift_files = [
     "ROLA/Database/Local/ConversationStore.swift",
     "ROLA/Database/Local/StyleProfileStore.swift",
     "ROLA/Database/Local/CalendarContextStore.swift",
+    "ROLA/Database/Local/SuggestionStore.swift",
     "ROLA/Utilities/Theme.swift",
     "ROLA/Utilities/KeychainHelper.swift",
     "ROLA/Utilities/PermissionStatusMapper.swift",
@@ -42,10 +44,15 @@ swift_files = [
     "ROLA/Services/Notifications/NotificationService.swift",
     "ROLA/AI/Context/SchedulingDetector.swift",
     "ROLA/AI/Context/ContextAssembler.swift",
+    "ROLA/AI/OpenAIClient.swift",
+    "ROLA/AI/Safety/SafetyClassifier.swift",
+    "ROLA/AI/Prompts/PromptBuilder.swift",
+    "ROLA/AI/Pipeline/AIPipeline.swift",
     "ROLA/Permissions/FullDiskAccessChecker.swift",
     "ROLA/Permissions/SystemSettingsURLs.swift",
     "ROLA/ViewModels/OnboardingViewModel.swift",
     "ROLA/ViewModels/DashboardViewModel.swift",
+    "ROLA/ViewModels/SuggestionViewModel.swift",
     "ROLA/Components/ROLAButton.swift",
     "ROLA/Components/PageIndicator.swift",
     "ROLA/Components/EmptyStateView.swift",
@@ -55,6 +62,8 @@ swift_files = [
     "ROLA/Components/ConversationDetailView.swift",
     "ROLA/Components/StyleProfileCard.swift",
     "ROLA/Components/CalendarViews.swift",
+    "ROLA/Components/ConfidenceBadge.swift",
+    "ROLA/Components/SuggestionCard.swift",
     "ROLA/Components/ROLALogoMark.swift",
     "ROLA/Views/Onboarding/OnboardingContainerView.swift",
     "ROLA/Views/Onboarding/WelcomeView.swift",
@@ -114,6 +123,9 @@ subgroups = {
     "ChatDB": gen_id(),
     "Local": gen_id(),
     "Context": gen_id(),
+    "Pipeline": gen_id(),
+    "Prompts": gen_id(),
+    "Safety": gen_id(),
     "AI": gen_id(),
     "Contacts": gen_id(),
     "Calendar": gen_id(),
@@ -248,6 +260,10 @@ context_children = [
     file_refs["ROLA/AI/Context/SchedulingDetector.swift"],
     file_refs["ROLA/AI/Context/ContextAssembler.swift"],
 ]
+pipeline_children = [file_refs["ROLA/AI/Pipeline/AIPipeline.swift"]]
+prompts_children = [file_refs["ROLA/AI/Prompts/PromptBuilder.swift"]]
+safety_children = [file_refs["ROLA/AI/Safety/SafetyClassifier.swift"]]
+openai_children = [file_refs["ROLA/AI/OpenAIClient.swift"]]
 notifications_children = [file_refs["ROLA/Services/Notifications/NotificationService.swift"]]
 
 for name, gid, children, path in [
@@ -261,11 +277,19 @@ for name, gid, children, path in [
 
 for name, gid, children, path in [
     ("Context", subgroups["Context"], context_children, "Context"),
+    ("Pipeline", subgroups["Pipeline"], pipeline_children, "Pipeline"),
+    ("Prompts", subgroups["Prompts"], prompts_children, "Prompts"),
+    ("Safety", subgroups["Safety"], safety_children, "Safety"),
 ]:
     out.extend(group_block(gid, name, children, path))
 
-ai_children = [subgroups["Context"]]
-out.extend(group_block(subgroups["AI"], "AI", ai_children, "AI"))
+ai_leaf_children = openai_children + [
+    subgroups["Context"],
+    subgroups["Pipeline"],
+    subgroups["Prompts"],
+    subgroups["Safety"],
+]
+out.extend(group_block(subgroups["AI"], "AI", ai_leaf_children, "AI"))
 
 for name, gid, children, path in [
     ("ChatDB", subgroups["ChatDB"], chatdb_children, "ChatDB"),
@@ -518,7 +542,7 @@ target_debug = [
     "INFOPLIST_KEY_NSContactsUsageDescription = \"ROLA uses your contacts to match messages with people you know.\";",
     "INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = \"ROLA reads your calendar to suggest replies based on your availability.\";",
     "LD_RUNPATH_SEARCH_PATHS = (\"$(inherited)\", \"@executable_path/../Frameworks\");",
-    "MARKETING_VERSION = 0.1.0;",
+    "MARKETING_VERSION = 0.6.0;",
     "PRODUCT_BUNDLE_IDENTIFIER = com.rola.app;",
     "PRODUCT_NAME = \"$(TARGET_NAME)\";",
     "SWIFT_EMIT_LOC_STRINGS = YES;",
@@ -534,7 +558,7 @@ test_debug = [
     "CODE_SIGN_STYLE = Automatic;",
     "CURRENT_PROJECT_VERSION = 1;",
     "GENERATE_INFOPLIST_FILE = YES;",
-    "MARKETING_VERSION = 0.1.0;",
+    "MARKETING_VERSION = 0.6.0;",
     "PRODUCT_BUNDLE_IDENTIFIER = com.rola.app.tests;",
     "PRODUCT_NAME = \"$(TARGET_NAME)\";",
     "SWIFT_VERSION = 6.0;",

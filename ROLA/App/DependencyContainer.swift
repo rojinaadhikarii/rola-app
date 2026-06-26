@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Dependency Container
 
@@ -10,6 +11,7 @@ final class DependencyContainer: DependencyContainerProtocol {
     let conversationStore: ConversationStore
     let styleProfileStore: StyleProfileStore
     let calendarContextStore: CalendarContextStore
+    let suggestionStore: SuggestionStore
     let styleEngine: StyleEngineProtocol
     let aiPipeline: AIPipelineProtocol
     let calendarService: CalendarServiceProtocol
@@ -21,7 +23,8 @@ final class DependencyContainer: DependencyContainerProtocol {
     init(
         messageImportService: MessageImportServiceProtocol? = nil,
         styleEngine: StyleEngineProtocol? = nil,
-        aiPipeline: AIPipelineProtocol = MockAIPipeline(),
+        aiPipeline: AIPipelineProtocol? = nil,
+        suggestionStore: SuggestionStore? = nil,
         calendarService: CalendarServiceProtocol? = nil,
         contactsService: ContactsServiceProtocol? = nil,
         notificationService: NotificationServiceProtocol? = nil,
@@ -30,7 +33,8 @@ final class DependencyContainer: DependencyContainerProtocol {
         useMockPermissions: Bool = false,
         useMockImport: Bool = false,
         useMockStyle: Bool = false,
-        useMockCalendar: Bool = false
+        useMockCalendar: Bool = false,
+        useMockAI: Bool = false
     ) {
         let calendar = calendarService ?? (
             (useMockPermissions || useMockCalendar)
@@ -41,6 +45,8 @@ final class DependencyContainer: DependencyContainerProtocol {
         let notifications = notificationService ?? (useMockPermissions ? MockNotificationService() : NotificationService())
         let importService = messageImportService ?? (useMockImport ? MockMessageImportService() : MessageImportService())
         let style = styleEngine ?? (useMockStyle ? MockStyleEngine() : StyleEngine())
+        let keyStore = apiKeyStore
+        let suggestions = suggestionStore ?? SuggestionStore()
 
         self.calendarService = calendar
         self.contactsService = contacts
@@ -50,13 +56,18 @@ final class DependencyContainer: DependencyContainerProtocol {
         self.conversationStore = ConversationStore(importService: importService)
         self.styleProfileStore = StyleProfileStore(styleEngine: style)
         self.calendarContextStore = CalendarContextStore(calendarService: calendar)
-        self.aiPipeline = aiPipeline
+        self.suggestionStore = suggestions
+        self.aiPipeline = aiPipeline ?? (
+            useMockAI
+                ? MockAIPipeline(suggestionStore: suggestions)
+                : AIPipeline(apiKeyStore: keyStore, suggestionStore: suggestions)
+        )
         self.permissionManager = permissionManager ?? PermissionManager(
             contactsService: contacts,
             calendarService: calendar,
             notificationService: notifications
         )
-        self.apiKeyStore = apiKeyStore
+        self.apiKeyStore = keyStore
     }
 
     static let live = DependencyContainer()
@@ -64,6 +75,7 @@ final class DependencyContainer: DependencyContainerProtocol {
         useMockPermissions: true,
         useMockImport: true,
         useMockStyle: true,
-        useMockCalendar: true
+        useMockCalendar: true,
+        useMockAI: true
     )
 }

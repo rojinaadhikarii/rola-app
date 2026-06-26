@@ -16,6 +16,17 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 6 — What's Included
+
+- **AI pipeline** — classify → safety → context → generate → safety → present
+- **OpenAI integration** — Chat Completions API with structured JSON output (`gpt-4o-mini`)
+- **Safety classifier** — rule-based pre/post checks for sensitive topics
+- **Prompt builder** — style, calendar, and conversation context in prompts
+- **Suggestion card** — Approve / Edit / Dismiss with confidence badge
+- **Approve & copy** — copies reply to clipboard for manual paste in Messages
+- **Suggestions filter** — sidebar filter for conversations with pending suggestions
+- **Learning loop stub** — logs user feedback locally for Milestone 7
+
 ## Milestone 5 — What's Included
 
 - **EventKit integration** — fetch events for the next 7 days
@@ -97,8 +108,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 | M2 — Real permissions | ✅ Complete |
 | M3 — iMessage import | ✅ Complete |
 | M4 — Style analysis | ✅ Complete |
-| M5 — Calendar integration | ✅ Current |
-| M6 — AI pipeline | Planned |
+| M5 — Calendar integration | ✅ Complete |
+| M6 — AI pipeline | ✅ Current |
 | M7 — Learning + Supabase | Planned |
 | M8 — Polish + notifications | Planned |
 

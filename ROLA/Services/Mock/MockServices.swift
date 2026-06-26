@@ -148,8 +148,53 @@ enum MockStyleData {
 }
 
 struct MockAIPipeline: AIPipelineProtocol {
-    func generateSuggestion(for messageID: String) async throws -> String {
-        "Sounds good!"
+    let suggestionStore: SuggestionStore
+
+    func generateReplySuggestion(
+        conversation: Conversation,
+        messages: [ImportedMessage],
+        incomingMessage: ImportedMessage,
+        globalStyle: StyleProfile?,
+        contactStyle: StyleProfile?,
+        calendarContext: CalendarContext?
+    ) async throws -> ReplySuggestion {
+        try await Task.sleep(for: .milliseconds(400))
+
+        if let existing = suggestionStore.pendingSuggestion(
+            chatId: conversation.id,
+            messageId: incomingMessage.id
+        ) {
+            return existing
+        }
+
+        let suggestion = ReplySuggestion(
+            id: UUID(),
+            chatId: conversation.id,
+            incomingMessageId: incomingMessage.id,
+            incomingMessageText: incomingMessage.text,
+            replyText: "Yeah, that works for me!",
+            confidence: 0.82,
+            reasoning: "Casual affirmative matching your typical tone.",
+            status: .pending,
+            safetyBlocked: false,
+            safetyReason: nil,
+            createdAt: Date()
+        )
+        suggestionStore.save(suggestion)
+        return suggestion
+    }
+
+    func approveSuggestion(_ suggestion: ReplySuggestion, editedText: String?) {
+        var updated = suggestion
+        updated.status = editedText != nil ? .edited : .approved
+        updated.editedText = editedText
+        suggestionStore.save(updated)
+    }
+
+    func dismissSuggestion(_ suggestion: ReplySuggestion) {
+        var updated = suggestion
+        updated.status = .dismissed
+        suggestionStore.save(updated)
     }
 }
 

@@ -238,6 +238,95 @@ final class ROLATests: XCTestCase {
         XCTAssertTrue(store.todayEventCount > 0)
     }
 
+    func testSafetyClassifierBlocksEmergency() {
+        let conversation = MockConversationData.sample[0]
+        let result = SafetyClassifier.preCheck(
+            message: "Call 911 there's been an accident",
+            conversation: conversation
+        )
+        XCTAssertTrue(result.isBlocked)
+        XCTAssertEqual(result.category, .emergency)
+    }
+
+    func testSafetyClassifierPassesCasualMessage() {
+        let conversation = MockConversationData.sample[0]
+        let result = SafetyClassifier.preCheck(
+            message: "Want to grab coffee tomorrow?",
+            conversation: conversation
+        )
+        XCTAssertFalse(result.isBlocked)
+    }
+
+    func testSafetyClassifierPostCheckBlocksAIDisclosure() {
+        let result = SafetyClassifier.postCheck(
+            reply: "As an AI language model, I cannot help with that.",
+            confidence: 0.9
+        )
+        XCTAssertTrue(result.isBlocked)
+    }
+
+    func testPromptBuilderIncludesConversationContext() {
+        let conversation = MockConversationData.sample[0]
+        let messages = MockConversationData.messages(for: conversation.id)
+        let request = SuggestionRequest(
+            conversation: conversation,
+            messages: messages,
+            globalStyle: MockStyleData.sampleResult.globalProfile,
+            contactStyle: nil,
+            calendarContext: MockCalendarData.sampleContext
+        )
+
+        let prompt = PromptBuilder.userPrompt(for: request)
+        XCTAssertTrue(prompt.contains(conversation.displayName))
+        XCTAssertTrue(prompt.contains("Recent conversation"))
+        XCTAssertTrue(prompt.contains("JSON"))
+    }
+
+    func testSuggestionStorePersistsPending() {
+        let store = SuggestionStore()
+        let chatId: Int64 = 99_001
+        let messageId: Int64 = 99_103
+        let suggestion = ReplySuggestion(
+            id: UUID(),
+            chatId: chatId,
+            incomingMessageId: messageId,
+            incomingMessageText: "Are you free?",
+            replyText: "Sure!",
+            confidence: 0.8,
+            reasoning: "Casual yes.",
+            status: .pending,
+            safetyBlocked: false,
+            safetyReason: nil,
+            createdAt: Date()
+        )
+
+        store.save(suggestion)
+        XCTAssertNotNil(store.pendingSuggestion(chatId: chatId, messageId: messageId))
+        XCTAssertTrue(store.chatIdsWithPendingSuggestions().contains(chatId))
+    }
+
+    @MainActor
+    func testMockAIPipelineGeneratesSuggestion() async throws {
+        let store = SuggestionStore()
+        let pipeline = MockAIPipeline(suggestionStore: store)
+        let conversation = MockConversationData.sample[0]
+        let messages = MockConversationData.messages(for: conversation.id)
+        let incoming = try XCTUnwrap(messages.last(where: { !$0.isFromMe }))
+
+        let suggestion = try await pipeline.generateReplySuggestion(
+            conversation: conversation,
+            messages: messages,
+            incomingMessage: incoming,
+            globalStyle: nil,
+            contactStyle: nil,
+            calendarContext: nil
+        )
+
+        XCTAssertEqual(suggestion.status, .pending)
+        XCTAssertFalse(suggestion.replyText.isEmpty)
+        XCTAssertEqual(store.pendingCount, 1)
+    }
+
     private func fixturePathInRepo() -> String {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

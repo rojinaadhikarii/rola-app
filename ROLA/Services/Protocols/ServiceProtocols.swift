@@ -12,7 +12,17 @@ protocol StyleEngineProtocol: Sendable {
 }
 
 protocol AIPipelineProtocol: Sendable {
-    func generateSuggestion(for messageID: String) async throws -> String
+    func generateReplySuggestion(
+        conversation: Conversation,
+        messages: [ImportedMessage],
+        incomingMessage: ImportedMessage,
+        globalStyle: StyleProfile?,
+        contactStyle: StyleProfile?,
+        calendarContext: CalendarContext?
+    ) async throws -> ReplySuggestion
+
+    func approveSuggestion(_ suggestion: ReplySuggestion, editedText: String?)
+    func dismissSuggestion(_ suggestion: ReplySuggestion)
 }
 
 @MainActor
@@ -62,6 +72,7 @@ protocol DependencyContainerProtocol: AnyObject {
     var styleEngine: StyleEngineProtocol { get }
     var calendarContextStore: CalendarContextStore { get }
     var aiPipeline: AIPipelineProtocol { get }
+    var suggestionStore: SuggestionStore { get }
     var calendarService: CalendarServiceProtocol { get }
     var contactsService: ContactsServiceProtocol { get }
     var notificationService: NotificationServiceProtocol { get }

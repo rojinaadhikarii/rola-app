@@ -5,6 +5,7 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel: DashboardViewModel?
+    @State private var suggestionViewModel: SuggestionViewModel?
 
     var body: some View {
         @Bindable var conversationStore = appState.conversationStore
@@ -26,6 +27,13 @@ struct DashboardView: View {
                 viewModel = DashboardViewModel(
                     conversationStore: conversationStore,
                     styleProfileStore: styleStore,
+                    calendarContextStore: calendarStore,
+                    suggestionStore: appState.suggestionStore
+                )
+                suggestionViewModel = SuggestionViewModel(
+                    aiPipeline: appState.aiPipeline,
+                    suggestionStore: appState.suggestionStore,
+                    styleProfileStore: styleStore,
                     calendarContextStore: calendarStore
                 )
                 Task { await calendarStore.refresh() }
@@ -34,6 +42,57 @@ struct DashboardView: View {
         .onChange(of: conversationStore.conversations.count) { _, _ in }
         .onChange(of: styleStore.hasProfile) { _, _ in }
         .onChange(of: calendarStore.context?.fetchedAt) { _, _ in }
+        .onChange(of: conversationStore.selectedConversation?.id) { _, newId in
+            handleConversationSelection(newId: newId, viewModel: viewModel)
+        }
+        .onChange(of: conversationStore.selectedMessages.count) { _, _ in
+            handleMessagesLoaded(viewModel: viewModel)
+        }
+    }
+
+    private func handleConversationSelection(newId: Int64?, viewModel: DashboardViewModel?) {
+        guard let viewModel,
+              let conversation = viewModel.selectedConversation,
+              let suggestionViewModel else {
+            suggestionViewModel?.reset()
+            return
+        }
+
+        suggestionViewModel.loadSuggestion(
+            for: conversation,
+            messages: viewModel.selectedMessages
+        )
+
+        guard conversation.needsReply,
+              !viewModel.isLoadingMessages,
+              !viewModel.selectedMessages.isEmpty else { return }
+
+        Task {
+            await suggestionViewModel.generateSuggestion(
+                for: conversation,
+                messages: viewModel.selectedMessages
+            )
+        }
+    }
+
+    private func handleMessagesLoaded(viewModel: DashboardViewModel?) {
+        guard let viewModel,
+              let conversation = viewModel.selectedConversation,
+              let suggestionViewModel,
+              conversation.needsReply,
+              !viewModel.isLoadingMessages else { return }
+
+        suggestionViewModel.loadSuggestion(
+            for: conversation,
+            messages: viewModel.selectedMessages
+        )
+
+        Task {
+            await suggestionViewModel.generateSuggestion(
+                for: conversation,
+                messages: viewModel.selectedMessages
+            )
+        }
     }
 
     private func dashboardHeader(viewModel: DashboardViewModel) -> some View {
@@ -256,6 +315,15 @@ struct DashboardView: View {
                     schedulingHint: viewModel.schedulingHint(for: conversation)
                 )
 
+                if conversation.needsReply, let suggestionViewModel {
+                    Divider().background(Theme.Colors.borderSubtle)
+                    suggestionSection(
+                        viewModel: viewModel,
+                        suggestionViewModel: suggestionViewModel,
+                        conversation: conversation
+                    )
+                }
+
                 if let contactProfile = appState.styleProfileStore.profile(for: conversation.id) {
                     Divider().background(Theme.Colors.borderSubtle)
                     contactStyleBanner(profile: contactProfile)
@@ -276,11 +344,99 @@ struct DashboardView: View {
             EmptyStateView(
                 systemImage: "bubble.left.and.bubble.right",
                 title: "Select a conversation",
-                message: "Choose a thread to preview recent messages. AI suggestions arrive in a future milestone."
+                message: "Choose a thread that needs a reply to see AI suggestions in your voice."
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.Colors.background)
         }
+    }
+
+    @ViewBuilder
+    private func suggestionSection(
+        viewModel: DashboardViewModel,
+        suggestionViewModel: SuggestionViewModel,
+        conversation: Conversation
+    ) -> some View {
+        if !appState.apiKeyStore.hasOpenAIKey {
+            HStack(spacing: Theme.Spacing.md) {
+                Image(systemName: "key")
+                    .foregroundStyle(Theme.Colors.warning)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("OpenAI API key required")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                    Text("Add your key in Settings to generate reply suggestions.")
+                        .font(Theme.Typography.caption2)
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                }
+                Spacer()
+                Button("Settings") {
+                    appState.openSettings()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            .padding(Theme.Spacing.lg)
+            .background(Theme.Colors.surface)
+        } else if let suggestion = suggestionViewModel.currentSuggestion {
+            SuggestionCard(
+                suggestion: suggestion,
+                isGenerating: suggestionViewModel.isGenerating,
+                errorMessage: suggestionViewModel.errorMessage,
+                onApprove: { suggestionViewModel.approveSuggestion() },
+                onEdit: { text in suggestionViewModel.editAndApprove(editedText: text) },
+                onDismiss: { suggestionViewModel.dismissSuggestion() },
+                onGenerate: {
+                    Task {
+                        await suggestionViewModel.generateSuggestion(
+                            for: conversation,
+                            messages: viewModel.selectedMessages
+                        )
+                    }
+                }
+            )
+            .padding(Theme.Spacing.lg)
+            .background(Theme.Colors.background)
+        } else if suggestionViewModel.isGenerating || suggestionViewModel.errorMessage != nil {
+            SuggestionCard(
+                suggestion: placeholderSuggestion(for: conversation, messages: viewModel.selectedMessages),
+                isGenerating: suggestionViewModel.isGenerating,
+                errorMessage: suggestionViewModel.errorMessage,
+                onApprove: {},
+                onEdit: { _ in },
+                onDismiss: {},
+                onGenerate: {
+                    Task {
+                        await suggestionViewModel.generateSuggestion(
+                            for: conversation,
+                            messages: viewModel.selectedMessages
+                        )
+                    }
+                }
+            )
+            .padding(Theme.Spacing.lg)
+            .background(Theme.Colors.background)
+        }
+    }
+
+    private func placeholderSuggestion(
+        for conversation: Conversation,
+        messages: [ImportedMessage]
+    ) -> ReplySuggestion {
+        let incoming = messages.last(where: { !$0.isFromMe })
+        return ReplySuggestion(
+            id: UUID(),
+            chatId: conversation.id,
+            incomingMessageId: incoming?.id,
+            incomingMessageText: incoming?.text ?? conversation.lastMessageText ?? "",
+            replyText: "",
+            confidence: 0,
+            reasoning: nil,
+            status: .pending,
+            safetyBlocked: false,
+            safetyReason: nil,
+            createdAt: Date()
+        )
     }
 
     private func contactStyleBanner(profile: StyleProfile) -> some View {

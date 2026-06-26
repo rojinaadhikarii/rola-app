@@ -57,6 +57,18 @@ final class AppState {
         container.calendarContextStore
     }
 
+    var suggestionStore: SuggestionStore {
+        container.suggestionStore
+    }
+
+    var aiPipeline: AIPipelineProtocol {
+        container.aiPipeline
+    }
+
+    var apiKeyStore: APIKeyStoreProtocol {
+        container.apiKeyStore
+    }
+
     // MARK: Init
 
     init(container: DependencyContainer) {

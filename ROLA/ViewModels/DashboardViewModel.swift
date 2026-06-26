@@ -33,17 +33,20 @@ final class DashboardViewModel {
     private let conversationStore: ConversationStore
     private let styleProfileStore: StyleProfileStore
     private let calendarContextStore: CalendarContextStore
+    private let suggestionStore: SuggestionStore
 
     var selectedFilter: DashboardFilter = .needsAttention
 
     init(
         conversationStore: ConversationStore,
         styleProfileStore: StyleProfileStore,
-        calendarContextStore: CalendarContextStore
+        calendarContextStore: CalendarContextStore,
+        suggestionStore: SuggestionStore
     ) {
         self.conversationStore = conversationStore
         self.styleProfileStore = styleProfileStore
         self.calendarContextStore = calendarContextStore
+        self.suggestionStore = suggestionStore
     }
 
     var conversations: [Conversation] {
@@ -56,7 +59,9 @@ final class DashboardViewModel {
             conversationStore.needsAttention
         case .all:
             conversationStore.conversations
-        case .yourStyle, .suggestions, .followUps, .calendar:
+        case .suggestions:
+            conversationsWithPendingSuggestions
+        case .yourStyle, .followUps, .calendar:
             []
         }
     }
@@ -121,6 +126,15 @@ final class DashboardViewModel {
         calendarContextStore.todayEventCount
     }
 
+    var pendingSuggestionCount: Int {
+        suggestionStore.pendingCount
+    }
+
+    private var conversationsWithPendingSuggestions: [Conversation] {
+        let chatIds = suggestionStore.chatIdsWithPendingSuggestions()
+        return conversationStore.conversations.filter { chatIds.contains($0.id) }
+    }
+
     func schedulingHint(for conversation: Conversation) -> String? {
         guard let lastIncoming = selectedMessages.last(where: { !$0.isFromMe }) else {
             if let preview = conversation.lastMessageText, !conversation.lastMessageIsFromMe {
@@ -141,7 +155,9 @@ final class DashboardViewModel {
             todayEventCount
         case .yourStyle:
             styleProfileStore.hasProfile ? 1 : 0
-        case .suggestions, .followUps:
+        case .suggestions:
+            suggestionStore.pendingCount
+        case .followUps:
             0
         }
     }
