@@ -196,6 +196,48 @@ final class ROLATests: XCTestCase {
         XCTAssertEqual(store.contactProfiles.count, 3)
     }
 
+    func testAvailabilityCheckerFreeWindows() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let events = [
+            CalendarEventItem(
+                id: "1",
+                title: "Meeting",
+                startDate: calendar.date(bySettingHour: 14, minute: 0, second: 0, of: today)!,
+                endDate: calendar.date(bySettingHour: 15, minute: 0, second: 0, of: today)!,
+                isAllDay: false,
+                location: nil
+            ),
+        ]
+
+        let day = AvailabilityChecker.dayAvailability(for: today, events: events)
+        XCTAssertFalse(day.freeWindows.isEmpty)
+        XCTAssertTrue(day.isBusy(at: calendar.date(bySettingHour: 14, minute: 30, second: 0, of: today)!))
+    }
+
+    func testSchedulingDetectorFindsThursday() {
+        XCTAssertTrue(SchedulingDetector.isSchedulingRelated("Are you free Thursday?"))
+        XCTAssertNotNil(SchedulingDetector.referencedDate(in: "Dinner Thursday?"))
+    }
+
+    func testContextAssemblerSchedulingHint() {
+        let context = MockCalendarData.sampleContext
+        let hint = ContextAssembler.schedulingHint(
+            for: "Are you free Thursday?",
+            context: context
+        )
+        XCTAssertNotNil(hint)
+        XCTAssertTrue(hint?.lowercased().contains("thursday") == true || hint?.lowercased().contains("busy") == true)
+    }
+
+    @MainActor
+    func testCalendarContextStoreMockRefresh() async {
+        let store = CalendarContextStore(calendarService: MockCalendarService(grantsAccess: true))
+        await store.refresh()
+        XCTAssertNotNil(store.context)
+        XCTAssertTrue(store.todayEventCount > 0)
+    }
+
     private func fixturePathInRepo() -> String {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

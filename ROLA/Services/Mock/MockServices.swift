@@ -155,8 +155,101 @@ struct MockAIPipeline: AIPipelineProtocol {
 
 @MainActor
 final class MockCalendarService: CalendarServiceProtocol {
-    func requestAccess() async -> PermissionStatus { .notDetermined }
-    func authorizationStatus() -> PermissionStatus { .notDetermined }
+    var grantsAccess: Bool
+
+    init(grantsAccess: Bool = true) {
+        self.grantsAccess = grantsAccess
+    }
+
+    func requestAccess() async -> PermissionStatus {
+        grantsAccess ? .granted : .denied
+    }
+
+    func authorizationStatus() -> PermissionStatus {
+        grantsAccess ? .granted : .notDetermined
+    }
+
+    func fetchContext() async throws -> CalendarContext {
+        grantsAccess ? MockCalendarData.sampleContext : CalendarContext(
+            fetchedAt: Date(),
+            today: AvailabilityChecker.dayAvailability(for: Date(), events: []),
+            week: [],
+            hasCalendarAccess: false
+        )
+    }
+
+    func isAvailable(from start: Date, to end: Date) async -> Bool {
+        let context = try await fetchContext()
+        return AvailabilityChecker.isAvailable(from: start, to: end, on: context.today)
+    }
+}
+
+enum MockCalendarData {
+    static var sampleContext: CalendarContext {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        func time(hour: Int, minute: Int = 0) -> Date {
+            calendar.date(bySettingHour: hour, minute: minute, second: 0, of: today)!
+        }
+
+        let todayEvents: [CalendarEventItem] = [
+            CalendarEventItem(
+                id: "evt-1",
+                title: "Team Standup",
+                startDate: time(hour: 9),
+                endDate: time(hour: 9, minute: 30),
+                isAllDay: false,
+                location: "Zoom"
+            ),
+            CalendarEventItem(
+                id: "evt-2",
+                title: "Product Review",
+                startDate: time(hour: 14),
+                endDate: time(hour: 15),
+                isAllDay: false,
+                location: nil
+            ),
+            CalendarEventItem(
+                id: "evt-3",
+                title: "Dinner with Sarah",
+                startDate: time(hour: 18),
+                endDate: time(hour: 22),
+                isAllDay: false,
+                location: "Downtown"
+            ),
+        ]
+
+        let todayAvailability = AvailabilityChecker.dayAvailability(for: today, events: todayEvents)
+
+        guard let thursday = calendar.date(byAdding: .day, value: 1, to: today) else {
+            return CalendarContext(
+                fetchedAt: Date(),
+                today: todayAvailability,
+                week: [todayAvailability],
+                hasCalendarAccess: true
+            )
+        }
+
+        let thursdayEvents = [
+            CalendarEventItem(
+                id: "evt-4",
+                title: "Client Call",
+                startDate: calendar.date(bySettingHour: 11, minute: 0, second: 0, of: thursday)!,
+                endDate: calendar.date(bySettingHour: 12, minute: 0, second: 0, of: thursday)!,
+                isAllDay: false,
+                location: nil
+            ),
+        ]
+        let thursdayAvailability = AvailabilityChecker.dayAvailability(for: thursday, events: thursdayEvents)
+
+        return CalendarContext(
+            fetchedAt: Date(),
+            today: todayAvailability,
+            week: [todayAvailability, thursdayAvailability],
+            hasCalendarAccess: true
+        )
+    }
 }
 
 @MainActor

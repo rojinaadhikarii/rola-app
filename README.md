@@ -16,6 +16,15 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 5 — What's Included
+
+- **EventKit integration** — fetch events for the next 7 days
+- **Availability checker** — free windows and busy/conflict detection
+- **Scheduling detector** — recognizes planning language in messages
+- **Calendar dashboard** — today + week view with free windows
+- **Conversation hints** — calendar context banner on scheduling messages
+- **AI context assembler** — natural-language calendar summary for Milestone 6
+
 ## Milestone 4 — What's Included
 
 - **Style analysis engine** — heuristics for word length, emoji, lowercase, slang, greetings, sign-offs
@@ -87,8 +96,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 | M1 — App shell + onboarding UI | ✅ Complete |
 | M2 — Real permissions | ✅ Complete |
 | M3 — iMessage import | ✅ Complete |
-| M4 — Style analysis | ✅ Current |
-| M5 — Calendar integration | Planned |
+| M4 — Style analysis | ✅ Complete |
+| M5 — Calendar integration | ✅ Current |
 | M6 — AI pipeline | Planned |
 | M7 — Learning + Supabase | Planned |
 | M8 — Polish + notifications | Planned |

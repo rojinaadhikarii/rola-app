@@ -53,6 +53,10 @@ final class AppState {
         container.styleProfileStore
     }
 
+    var calendarContextStore: CalendarContextStore {
+        container.calendarContextStore
+    }
+
     // MARK: Init
 
     init(container: DependencyContainer) {
@@ -154,6 +158,7 @@ final class AppState {
         if conversationStore.importError == nil {
             await styleProfileStore.analyze()
         }
+        await calendarContextStore.refresh()
     }
 
     /// Skip import but still complete onboarding (for testing).

@@ -9,6 +9,7 @@ final class DependencyContainer: DependencyContainerProtocol {
     let messageImportService: MessageImportServiceProtocol
     let conversationStore: ConversationStore
     let styleProfileStore: StyleProfileStore
+    let calendarContextStore: CalendarContextStore
     let styleEngine: StyleEngineProtocol
     let aiPipeline: AIPipelineProtocol
     let calendarService: CalendarServiceProtocol
@@ -28,9 +29,14 @@ final class DependencyContainer: DependencyContainerProtocol {
         apiKeyStore: APIKeyStoreProtocol = KeychainAPIKeyStore(),
         useMockPermissions: Bool = false,
         useMockImport: Bool = false,
-        useMockStyle: Bool = false
+        useMockStyle: Bool = false,
+        useMockCalendar: Bool = false
     ) {
-        let calendar = calendarService ?? (useMockPermissions ? MockCalendarService() : CalendarService())
+        let calendar = calendarService ?? (
+            (useMockPermissions || useMockCalendar)
+                ? MockCalendarService(grantsAccess: true)
+                : CalendarService()
+        )
         let contacts = contactsService ?? (useMockPermissions ? MockContactsService() : ContactsService())
         let notifications = notificationService ?? (useMockPermissions ? MockNotificationService() : NotificationService())
         let importService = messageImportService ?? (useMockImport ? MockMessageImportService() : MessageImportService())
@@ -43,6 +49,7 @@ final class DependencyContainer: DependencyContainerProtocol {
         self.styleEngine = style
         self.conversationStore = ConversationStore(importService: importService)
         self.styleProfileStore = StyleProfileStore(styleEngine: style)
+        self.calendarContextStore = CalendarContextStore(calendarService: calendar)
         self.aiPipeline = aiPipeline
         self.permissionManager = permissionManager ?? PermissionManager(
             contactsService: contacts,
@@ -53,5 +60,10 @@ final class DependencyContainer: DependencyContainerProtocol {
     }
 
     static let live = DependencyContainer()
-    static let preview = DependencyContainer(useMockPermissions: true, useMockImport: true, useMockStyle: true)
+    static let preview = DependencyContainer(
+        useMockPermissions: true,
+        useMockImport: true,
+        useMockStyle: true,
+        useMockCalendar: true
+    )
 }

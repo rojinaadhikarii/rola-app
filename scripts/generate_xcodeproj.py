@@ -19,12 +19,14 @@ swift_files = [
     "ROLA/Models/Conversation.swift",
     "ROLA/Models/ImportedMessage.swift",
     "ROLA/Models/StyleProfile.swift",
+    "ROLA/Models/CalendarContext.swift",
     "ROLA/Database/ChatDB/ChatDBError.swift",
     "ROLA/Database/ChatDB/AppleDateConverter.swift",
     "ROLA/Database/ChatDB/AttributedBodyDecoder.swift",
     "ROLA/Database/ChatDB/ChatDBReader.swift",
     "ROLA/Database/Local/ConversationStore.swift",
     "ROLA/Database/Local/StyleProfileStore.swift",
+    "ROLA/Database/Local/CalendarContextStore.swift",
     "ROLA/Utilities/Theme.swift",
     "ROLA/Utilities/KeychainHelper.swift",
     "ROLA/Utilities/PermissionStatusMapper.swift",
@@ -36,8 +38,10 @@ swift_files = [
     "ROLA/Services/StyleAnalysis/StyleEngine.swift",
     "ROLA/Services/Contacts/ContactsService.swift",
     "ROLA/Services/Calendar/CalendarService.swift",
+    "ROLA/Services/Calendar/AvailabilityChecker.swift",
     "ROLA/Services/Notifications/NotificationService.swift",
-    "ROLA/Permissions/PermissionManager.swift",
+    "ROLA/AI/Context/SchedulingDetector.swift",
+    "ROLA/AI/Context/ContextAssembler.swift",
     "ROLA/Permissions/FullDiskAccessChecker.swift",
     "ROLA/Permissions/SystemSettingsURLs.swift",
     "ROLA/ViewModels/OnboardingViewModel.swift",
@@ -50,6 +54,7 @@ swift_files = [
     "ROLA/Components/ConversationRow.swift",
     "ROLA/Components/ConversationDetailView.swift",
     "ROLA/Components/StyleProfileCard.swift",
+    "ROLA/Components/CalendarViews.swift",
     "ROLA/Components/ROLALogoMark.swift",
     "ROLA/Views/Onboarding/OnboardingContainerView.swift",
     "ROLA/Views/Onboarding/WelcomeView.swift",
@@ -108,6 +113,8 @@ subgroups = {
     "Database": gen_id(),
     "ChatDB": gen_id(),
     "Local": gen_id(),
+    "Context": gen_id(),
+    "AI": gen_id(),
     "Contacts": gen_id(),
     "Calendar": gen_id(),
     "Notifications": gen_id(),
@@ -233,7 +240,14 @@ vm_children = [file_refs[f] for f in swift_files if "/ViewModels/" in f]
 comp_children = [file_refs[f] for f in swift_files if "/Components/" in f]
 
 contacts_children = [file_refs["ROLA/Services/Contacts/ContactsService.swift"]]
-calendar_children = [file_refs["ROLA/Services/Calendar/CalendarService.swift"]]
+calendar_children = [
+    file_refs["ROLA/Services/Calendar/CalendarService.swift"],
+    file_refs["ROLA/Services/Calendar/AvailabilityChecker.swift"],
+]
+context_children = [
+    file_refs["ROLA/AI/Context/SchedulingDetector.swift"],
+    file_refs["ROLA/AI/Context/ContextAssembler.swift"],
+]
 notifications_children = [file_refs["ROLA/Services/Notifications/NotificationService.swift"]]
 
 for name, gid, children, path in [
@@ -244,6 +258,14 @@ for name, gid, children, path in [
     ("StyleAnalysis", subgroups["StyleAnalysis"], style_analysis_children, "StyleAnalysis"),
 ]:
     out.extend(group_block(gid, name, children, path))
+
+for name, gid, children, path in [
+    ("Context", subgroups["Context"], context_children, "Context"),
+]:
+    out.extend(group_block(gid, name, children, path))
+
+ai_children = [subgroups["Context"]]
+out.extend(group_block(subgroups["AI"], "AI", ai_children, "AI"))
 
 for name, gid, children, path in [
     ("ChatDB", subgroups["ChatDB"], chatdb_children, "ChatDB"),
@@ -287,6 +309,7 @@ rola_children = [
     subgroups["App"],
     subgroups["Models"],
     subgroups["Database"],
+    subgroups["AI"],
     subgroups["Utilities"],
     subgroups["Services"],
     subgroups["Permissions"],

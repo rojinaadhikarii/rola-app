@@ -9,6 +9,7 @@ struct DashboardView: View {
     var body: some View {
         @Bindable var conversationStore = appState.conversationStore
         @Bindable var styleStore = appState.styleProfileStore
+        @Bindable var calendarStore = appState.calendarContextStore
 
         VStack(spacing: 0) {
             if let viewModel {
@@ -24,12 +25,15 @@ struct DashboardView: View {
             if viewModel == nil {
                 viewModel = DashboardViewModel(
                     conversationStore: conversationStore,
-                    styleProfileStore: styleStore
+                    styleProfileStore: styleStore,
+                    calendarContextStore: calendarStore
                 )
+                Task { await calendarStore.refresh() }
             }
         }
         .onChange(of: conversationStore.conversations.count) { _, _ in }
         .onChange(of: styleStore.hasProfile) { _, _ in }
+        .onChange(of: calendarStore.context?.fetchedAt) { _, _ in }
     }
 
     private func dashboardHeader(viewModel: DashboardViewModel) -> some View {
@@ -61,7 +65,13 @@ struct DashboardView: View {
                     value: viewModel.hasStyleProfile ? "✓" : "—",
                     icon: "text.bubble"
                 )
-                statPill(label: "Saved", value: "—", icon: "clock")
+                statPill(
+                    label: "Today",
+                    value: viewModel.hasCalendarAccess
+                        ? (viewModel.todayEventCount > 0 ? "\(viewModel.todayEventCount)" : "Free")
+                        : "—",
+                    icon: "calendar"
+                )
 
                 ROLAIconButton(systemImage: "arrow.clockwise") {
                     Task { await viewModel.refresh() }
@@ -113,6 +123,16 @@ struct DashboardView: View {
                     isLoading: viewModel.isAnalyzingStyle,
                     errorMessage: viewModel.styleAnalysisError
                 )
+            } else if viewModel.selectedFilter == .calendar {
+                CalendarContextView(
+                    context: viewModel.calendarContext,
+                    isLoading: viewModel.isLoadingCalendar,
+                    hasAccess: viewModel.hasCalendarAccess,
+                    errorMessage: viewModel.calendarError,
+                    onRequestAccess: {
+                        Task { await viewModel.requestCalendarAccess() }
+                    }
+                )
             } else {
                 conversationList(viewModel: viewModel)
                     .frame(width: 300)
@@ -153,7 +173,7 @@ struct DashboardView: View {
 
     private func isFilterEnabled(_ filter: DashboardFilter, viewModel: DashboardViewModel) -> Bool {
         switch filter {
-        case .needsAttention, .all, .yourStyle:
+        case .needsAttention, .all, .yourStyle, .calendar:
             true
         case .suggestions, .followUps:
             viewModel.count(for: filter) > 0
@@ -179,6 +199,10 @@ struct DashboardView: View {
 
                 if count > 0 || title == "Your Style" {
                     Text(title == "Your Style" && count > 0 ? "✓" : "\(count)")
+                        .font(Theme.Typography.caption)
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                } else if title == "Calendar" && count == 0 && isSelected {
+                    Text("Free")
                         .font(Theme.Typography.caption)
                         .foregroundStyle(Theme.Colors.textTertiary)
                 }
@@ -228,7 +252,8 @@ struct DashboardView: View {
                 ConversationDetailView(
                     conversation: conversation,
                     messages: viewModel.selectedMessages,
-                    isLoading: viewModel.isLoadingMessages
+                    isLoading: viewModel.isLoadingMessages,
+                    schedulingHint: viewModel.schedulingHint(for: conversation)
                 )
 
                 if let contactProfile = appState.styleProfileStore.profile(for: conversation.id) {
@@ -320,5 +345,6 @@ struct DashboardView: View {
             let state = AppState(container: .preview)
             await state.conversationStore.importConversations()
             await state.styleProfileStore.analyze()
+            await state.calendarContextStore.refresh()
         }
 }

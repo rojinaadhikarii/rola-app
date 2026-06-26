@@ -5,6 +5,7 @@ import Foundation
 enum DashboardFilter: String, CaseIterable, Identifiable {
     case needsAttention
     case all
+    case calendar
     case yourStyle
     case suggestions
     case followUps
@@ -15,6 +16,7 @@ enum DashboardFilter: String, CaseIterable, Identifiable {
         switch self {
         case .needsAttention: "Needs Attention"
         case .all: "All"
+        case .calendar: "Calendar"
         case .yourStyle: "Your Style"
         case .suggestions: "Suggestions"
         case .followUps: "Follow-ups"
@@ -30,12 +32,18 @@ final class DashboardViewModel {
 
     private let conversationStore: ConversationStore
     private let styleProfileStore: StyleProfileStore
+    private let calendarContextStore: CalendarContextStore
 
     var selectedFilter: DashboardFilter = .needsAttention
 
-    init(conversationStore: ConversationStore, styleProfileStore: StyleProfileStore) {
+    init(
+        conversationStore: ConversationStore,
+        styleProfileStore: StyleProfileStore,
+        calendarContextStore: CalendarContextStore
+    ) {
         self.conversationStore = conversationStore
         self.styleProfileStore = styleProfileStore
+        self.calendarContextStore = calendarContextStore
     }
 
     var conversations: [Conversation] {
@@ -48,7 +56,7 @@ final class DashboardViewModel {
             conversationStore.needsAttention
         case .all:
             conversationStore.conversations
-        case .yourStyle, .suggestions, .followUps:
+        case .yourStyle, .suggestions, .followUps, .calendar:
             []
         }
     }
@@ -93,12 +101,44 @@ final class DashboardViewModel {
         styleProfileStore.hasProfile
     }
 
+    var calendarContext: CalendarContext? {
+        calendarContextStore.context
+    }
+
+    var isLoadingCalendar: Bool {
+        calendarContextStore.isLoading
+    }
+
+    var calendarError: String? {
+        calendarContextStore.lastError
+    }
+
+    var hasCalendarAccess: Bool {
+        calendarContextStore.hasAccess
+    }
+
+    var todayEventCount: Int {
+        calendarContextStore.todayEventCount
+    }
+
+    func schedulingHint(for conversation: Conversation) -> String? {
+        guard let lastIncoming = selectedMessages.last(where: { !$0.isFromMe }) else {
+            if let preview = conversation.lastMessageText, !conversation.lastMessageIsFromMe {
+                return calendarContextStore.schedulingHint(for: preview)
+            }
+            return nil
+        }
+        return calendarContextStore.schedulingHint(for: lastIncoming.text)
+    }
+
     func count(for filter: DashboardFilter) -> Int {
         switch filter {
         case .needsAttention:
             conversationStore.needsAttention.count
         case .all:
             conversationStore.conversations.count
+        case .calendar:
+            todayEventCount
         case .yourStyle:
             styleProfileStore.hasProfile ? 1 : 0
         case .suggestions, .followUps:
@@ -108,7 +148,7 @@ final class DashboardViewModel {
 
     func selectFilter(_ filter: DashboardFilter) {
         selectedFilter = filter
-        if filter == .yourStyle {
+        if filter == .yourStyle || filter == .calendar {
             Task { await conversationStore.selectConversation(nil) }
         }
     }
@@ -122,5 +162,10 @@ final class DashboardViewModel {
         if conversationStore.importError == nil {
             await styleProfileStore.analyze()
         }
+        await calendarContextStore.refresh()
+    }
+
+    func requestCalendarAccess() async {
+        await calendarContextStore.requestAccessAndRefresh()
     }
 }

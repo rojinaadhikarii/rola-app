@@ -36,10 +36,17 @@ struct ConversationDetailView: View {
     let conversation: Conversation
     let messages: [ImportedMessage]
     let isLoading: Bool
+    var schedulingHint: String?
 
     var body: some View {
         VStack(spacing: 0) {
             detailHeader
+
+            if let schedulingHint {
+                SchedulingHintBanner(hint: schedulingHint)
+                    .padding(.horizontal, Theme.Spacing.lg)
+                    .padding(.bottom, Theme.Spacing.sm)
+            }
 
             Divider()
                 .background(Theme.Colors.borderSubtle)

@@ -25,6 +25,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                     messagesSection
                     styleSection
+                    calendarSection
                     apiKeySection
                     aboutSection
                 }
@@ -146,6 +147,52 @@ struct SettingsView: View {
         .rolaCard()
     }
 
+    private var calendarSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            sectionTitle("Calendar")
+
+            HStack {
+                Text("Access")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                Spacer()
+                Text(appState.calendarContextStore.hasAccess ? "Granted" : "Not granted")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+            }
+
+            if appState.calendarContextStore.hasAccess {
+                HStack {
+                    Text("Events today")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text("\(appState.calendarContextStore.todayEventCount)")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                }
+            }
+
+            ROLAButton(
+                title: appState.calendarContextStore.hasAccess ? "Refresh Calendar" : "Grant Calendar Access",
+                style: .secondary,
+                systemImage: "calendar",
+                isLoading: appState.calendarContextStore.isLoading
+            ) {
+                Task {
+                    if appState.calendarContextStore.hasAccess {
+                        await appState.calendarContextStore.refresh()
+                    } else {
+                        await appState.calendarContextStore.requestAccessAndRefresh()
+                    }
+                }
+            }
+            .frame(maxWidth: 240)
+        }
+        .padding(Theme.Spacing.lg)
+        .rolaCard()
+    }
+
     private var apiKeySection: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             sectionTitle("OpenAI API Key")
@@ -219,7 +266,7 @@ struct SettingsView: View {
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Spacer()
-                Text("0.4.0 (Milestone 4)")
+                Text("0.5.0 (Milestone 5)")
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textPrimary)
             }

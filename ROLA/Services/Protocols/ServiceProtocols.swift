@@ -19,6 +19,8 @@ protocol AIPipelineProtocol: Sendable {
 protocol CalendarServiceProtocol: AnyObject {
     func requestAccess() async -> PermissionStatus
     func authorizationStatus() -> PermissionStatus
+    func fetchContext() async throws -> CalendarContext
+    func isAvailable(from start: Date, to end: Date) async -> Bool
 }
 
 @MainActor
@@ -58,6 +60,7 @@ protocol DependencyContainerProtocol: AnyObject {
     var conversationStore: ConversationStore { get }
     var styleProfileStore: StyleProfileStore { get }
     var styleEngine: StyleEngineProtocol { get }
+    var calendarContextStore: CalendarContextStore { get }
     var aiPipeline: AIPipelineProtocol { get }
     var calendarService: CalendarServiceProtocol { get }
     var contactsService: ContactsServiceProtocol { get }
