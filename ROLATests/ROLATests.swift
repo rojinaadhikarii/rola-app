@@ -122,6 +122,80 @@ final class ROLATests: XCTestCase {
         XCTAssertEqual(store.needsAttention.count, 2)
     }
 
+    func testStyleAnalyzerEmojiDetection() {
+        let samples = [
+            StyleMessageSample(text: "I'd be down 😂", chatId: 1, displayName: "Alex", isGroup: false),
+            StyleMessageSample(text: "sounds good!", chatId: 1, displayName: "Alex", isGroup: false),
+            StyleMessageSample(text: "hey what's up", chatId: 1, displayName: "Alex", isGroup: false),
+            StyleMessageSample(text: "lol yeah", chatId: 1, displayName: "Alex", isGroup: false),
+            StyleMessageSample(text: "see you tomorrow", chatId: 1, displayName: "Alex", isGroup: false),
+        ]
+
+        let traits = StyleAnalyzer.analyze(messages: samples)
+        XCTAssertGreaterThan(traits.emojiRate, 0)
+        XCTAssertGreaterThan(traits.slangRate, 0)
+        XCTAssertFalse(traits.topEmojis.isEmpty)
+    }
+
+    func testStyleAnalyzerBuildsContactProfiles() {
+        var samples: [StyleMessageSample] = []
+        for index in 0..<6 {
+            samples.append(
+                StyleMessageSample(
+                    text: "hey mom love you ❤️",
+                    chatId: 2,
+                    displayName: "Mom",
+                    isGroup: false
+                )
+            )
+        }
+        for index in 0..<6 {
+            samples.append(
+                StyleMessageSample(
+                    text: "That works for me. Thanks!",
+                    chatId: 3,
+                    displayName: "Boss",
+                    isGroup: false
+                )
+            )
+        }
+        for index in 0..<10 {
+            samples.append(
+                StyleMessageSample(
+                    text: "yeah sounds good 😂",
+                    chatId: 1,
+                    displayName: "Alex",
+                    isGroup: false
+                )
+            )
+        }
+
+        let result = StyleAnalyzer.buildProfiles(from: samples)
+        XCTAssertGreaterThanOrEqual(result.globalProfile.traits.messageCount, 10)
+        XCTAssertEqual(result.contactProfiles.count, 2)
+        XCTAssertTrue(result.contactProfiles.contains { $0.relationship == .family })
+    }
+
+    func testRelationshipCategoryInference() {
+        XCTAssertEqual(RelationshipCategory.infer(displayName: "Mom", isGroup: false), .family)
+        XCTAssertEqual(RelationshipCategory.infer(displayName: "Work Team", isGroup: true), .work)
+    }
+
+    func testOutgoingMessagesFixture() throws {
+        let path = fixturePathInRepo()
+        let reader = ChatDBReader(databasePath: path)
+        let outgoing = try reader.fetchOutgoingMessages(limit: 50)
+        XCTAssertGreaterThanOrEqual(outgoing.count, 10)
+    }
+
+    @MainActor
+    func testStyleProfileStoreMockAnalysis() async {
+        let store = StyleProfileStore(styleEngine: MockStyleEngine())
+        await store.analyze()
+        XCTAssertTrue(store.hasProfile)
+        XCTAssertEqual(store.contactProfiles.count, 3)
+    }
+
     private func fixturePathInRepo() -> String {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

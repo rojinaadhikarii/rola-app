@@ -1,6 +1,27 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Import Phase
+
+enum ImportPhase: Equatable {
+    case importingMessages
+    case analyzingStyle
+
+    var title: String {
+        switch self {
+        case .importingMessages: "Importing conversations"
+        case .analyzingStyle: "Analyzing your style"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .importingMessages: "Reading your iMessage history…"
+        case .analyzingStyle: "Learning how you write with different people…"
+        }
+    }
+}
+
 // MARK: - App State
 
 /// Global application state and navigation.
@@ -17,6 +38,7 @@ final class AppState {
 
     var isImporting: Bool = false
     var importProgress: Double = 0
+    var importPhase: ImportPhase = .importingMessages
     var hasCompletedOnboarding: Bool
 
     // MARK: Dependencies
@@ -25,6 +47,10 @@ final class AppState {
 
     var conversationStore: ConversationStore {
         container.conversationStore
+    }
+
+    var styleProfileStore: StyleProfileStore {
+        container.styleProfileStore
     }
 
     // MARK: Init
@@ -37,7 +63,7 @@ final class AppState {
         self.onboardingStep = .welcome
 
         if completed {
-            Task { await container.conversationStore.refresh() }
+            Task { await refreshData() }
         }
     }
 
@@ -75,6 +101,7 @@ final class AppState {
         hasCompletedOnboarding = false
         onboardingStep = .welcome
         route = .onboarding
+        styleProfileStore.clear()
     }
 
     func openSettings() {
@@ -89,15 +116,28 @@ final class AppState {
         }
     }
 
-    // MARK: Message Import
+    // MARK: Message Import + Style Analysis
 
     func importMessages() async {
         isImporting = true
         importProgress = 0
+        importPhase = .importingMessages
 
         await conversationStore.importConversations { [weak self] progress in
             Task { @MainActor in
-                self?.importProgress = progress
+                self?.importProgress = progress * 0.6
+            }
+        }
+
+        if conversationStore.importError != nil {
+            isImporting = false
+            return
+        }
+
+        importPhase = .analyzingStyle
+        await styleProfileStore.analyze { [weak self] progress in
+            Task { @MainActor in
+                self?.importProgress = 0.6 + (progress * 0.4)
             }
         }
 
@@ -109,13 +149,20 @@ final class AppState {
         }
     }
 
+    func refreshData() async {
+        await conversationStore.refresh()
+        if conversationStore.importError == nil {
+            await styleProfileStore.analyze()
+        }
+    }
+
     /// Skip import but still complete onboarding (for testing).
     func skipImport() async {
         completeOnboarding()
     }
 
     var importError: String? {
-        conversationStore.importError
+        conversationStore.importError ?? styleProfileStore.analysisError
     }
 
     private static let onboardingKey = "com.rola.app.onboarding-complete"

@@ -24,6 +24,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
                     messagesSection
+                    styleSection
                     apiKeySection
                     aboutSection
                 }
@@ -84,6 +85,60 @@ struct SettingsView: View {
                 isLoading: appState.conversationStore.isImporting
             ) {
                 Task { await appState.conversationStore.refresh() }
+            }
+            .frame(maxWidth: 220)
+        }
+        .padding(Theme.Spacing.lg)
+        .rolaCard()
+    }
+
+    private var styleSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            sectionTitle("Communication Style")
+
+            if let profile = appState.styleProfileStore.globalProfile {
+                HStack {
+                    Text("Tone")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text(profile.traits.toneSummary.capitalized)
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                }
+
+                HStack {
+                    Text("Messages analyzed")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text("\(profile.traits.messageCount)")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                }
+
+                HStack {
+                    Text("Contact profiles")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text("\(appState.styleProfileStore.contactProfiles.count)")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                }
+            } else {
+                Text("No style profile yet. Import messages to analyze your communication style.")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+
+            ROLAButton(
+                title: "Re-analyze Style",
+                style: .secondary,
+                systemImage: "text.bubble",
+                isLoading: appState.styleProfileStore.isAnalyzing
+            ) {
+                Task { await appState.styleProfileStore.analyze() }
             }
             .frame(maxWidth: 220)
         }
@@ -164,7 +219,7 @@ struct SettingsView: View {
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Spacer()
-                Text("0.3.0 (Milestone 3)")
+                Text("0.4.0 (Milestone 4)")
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textPrimary)
             }

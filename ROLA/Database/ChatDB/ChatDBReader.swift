@@ -29,6 +29,16 @@ struct RawMessageRow: Sendable {
     let handleIdentifier: String?
 }
 
+struct RawOutgoingMessageRow: Sendable {
+    let messageId: Int64
+    let chatId: Int64
+    let text: String?
+    let attributedBody: Data?
+    let date: Int64
+    let chatDisplayName: String?
+    let isGroup: Bool
+}
+
 // MARK: - Chat DB Reader
 
 /// Read-only access to Apple's iMessage SQLite database.
@@ -191,6 +201,84 @@ final class ChatDBReader: @unchecked Sendable {
         }
 
         return rows.reversed()
+    }
+
+    func fetchOutgoingMessages(limit: Int = 5_000) throws -> [RawOutgoingMessageRow] {
+        guard FullDiskAccessChecker.canReadMessagesDatabase(at: databasePath) else {
+            throw ChatDBError.fullDiskAccessRequired
+        }
+
+        var database: OpaquePointer?
+        guard sqlite3_open_v2(databasePath, &database, SQLITE_OPEN_READONLY, nil) == SQLITE_OK,
+              let database
+        else {
+            let message = String(cString: sqlite3_errmsg(database))
+            sqlite3_close(database)
+            throw ChatDBError.openFailed(message: message)
+        }
+        defer { sqlite3_close(database) }
+
+        let sql = """
+            SELECT
+                m.ROWID,
+                cmj.chat_id,
+                m.text,
+                m.attributedBody,
+                m.date,
+                c.display_name,
+                c.chat_identifier,
+                (
+                    SELECT COUNT(*)
+                    FROM chat_handle_join chj
+                    WHERE chj.chat_id = c.ROWID
+                ) AS handle_count
+            FROM message m
+            JOIN chat_message_join cmj ON cmj.message_id = m.ROWID
+            JOIN chat c ON c.ROWID = cmj.chat_id
+            WHERE m.is_from_me = 1
+            ORDER BY m.date DESC
+            LIMIT ?
+            """
+
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
+              let statement
+        else {
+            throw ChatDBError.queryFailed(message: errorMessage(from: database))
+        }
+        defer { sqlite3_finalize(statement) }
+
+        sqlite3_bind_int(statement, 1, Int32(limit))
+
+        var rows: [RawOutgoingMessageRow] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            let chatId = sqlite3_column_int64(statement, 1)
+            let displayName = columnOptionalString(statement, index: 5)
+            let chatIdentifier = columnOptionalString(statement, index: 6)
+            let handleCount = Int(sqlite3_column_int(statement, 7))
+            let isGroup = handleCount > 1
+
+            let resolvedName = Conversation.resolveDisplayName(
+                displayName: displayName,
+                chatIdentifier: chatIdentifier,
+                handles: [],
+                isGroup: isGroup
+            )
+
+            rows.append(
+                RawOutgoingMessageRow(
+                    messageId: sqlite3_column_int64(statement, 0),
+                    chatId: chatId,
+                    text: columnOptionalString(statement, index: 2),
+                    attributedBody: columnOptionalData(statement, index: 3),
+                    date: sqlite3_column_int64(statement, 4),
+                    chatDisplayName: resolvedName,
+                    isGroup: isGroup
+                )
+            )
+        }
+
+        return rows
     }
 
     // MARK: - Private

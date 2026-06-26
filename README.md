@@ -16,6 +16,15 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 4 — What's Included
+
+- **Style analysis engine** — heuristics for word length, emoji, lowercase, slang, greetings, sign-offs
+- **Global profile** — your overall communication style from sent messages
+- **Per-contact profiles** — relationship-specific tone (family, friends, work)
+- **Your Style dashboard** — full communication profile view
+- **Onboarding integration** — style analysis runs automatically after message import
+- **Disk cache** — profiles persist across app launches
+
 ## Milestone 3 — What's Included
 
 - **iMessage import** — read-only SQLite access to `~/Library/Messages/chat.db`
@@ -77,8 +86,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 |-----------|--------|
 | M1 — App shell + onboarding UI | ✅ Complete |
 | M2 — Real permissions | ✅ Complete |
-| M3 — iMessage import | ✅ Current |
-| M4 — Style analysis | Planned |
+| M3 — iMessage import | ✅ Complete |
+| M4 — Style analysis | ✅ Current |
 | M5 — Calendar integration | Planned |
 | M6 — AI pipeline | Planned |
 | M7 — Learning + Supabase | Planned |

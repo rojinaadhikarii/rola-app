@@ -14,7 +14,10 @@ struct OnboardingContainerView: View {
 
             ZStack {
                 if appState.isImporting {
-                    ImportProgressView(progress: appState.importProgress)
+                    ImportProgressView(
+                        progress: appState.importProgress,
+                        phase: appState.importPhase
+                    )
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     stepContent

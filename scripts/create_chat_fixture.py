@@ -87,6 +87,32 @@ def main():
     conn.execute("INSERT INTO chat_message_join (chat_id, message_id) VALUES (1, 3)")
     conn.execute("INSERT INTO chat_message_join (chat_id, message_id) VALUES (2, 2)")
 
+    outgoing_messages = [
+        (4, "hey! yeah i'm down 😂", 1, now_ns - 5_400_000_000_000),
+        (5, "sounds good, see you then", 1, now_ns - 5_000_000_000_000),
+        (6, "lol for real", 1, now_ns - 4_800_000_000_000),
+        (7, "hey want to grab dinner?", 1, now_ns - 4_600_000_000_000),
+        (8, "i'm free after 6", 1, now_ns - 4_400_000_000_000),
+        (9, "perfect thanks!", 1, now_ns - 4_200_000_000_000),
+        (10, "yep! just got home ❤️", 2, now_ns - 3_800_000_000_000),
+        (11, "love you!", 2, now_ns - 3_600_000_000_000),
+        (12, "hey mom", 2, now_ns - 3_400_000_000_000),
+        (13, "ok sounds good", 2, now_ns - 3_200_000_000_000),
+        (14, "on my way home now", 2, now_ns - 3_000_000_000_000),
+        (15, "thanks!", 1, now_ns - 2_800_000_000_000),
+    ]
+
+    for rowid, text, chat_id, date in outgoing_messages:
+        conn.execute(
+            "INSERT INTO message (ROWID, guid, text, handle_id, date, is_from_me, date_read) "
+            "VALUES (?, ?, ?, 0, ?, 1, ?)",
+            (rowid, f"msg-{rowid}", text, date, date),
+        )
+        conn.execute(
+            "INSERT INTO chat_message_join (chat_id, message_id) VALUES (?, ?)",
+            (chat_id, rowid),
+        )
+
     conn.commit()
     conn.close()
     print(f"Created {FIXTURE_PATH}")

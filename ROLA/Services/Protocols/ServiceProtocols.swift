@@ -8,7 +8,7 @@ protocol MessageImportServiceProtocol: Sendable {
 }
 
 protocol StyleEngineProtocol: Sendable {
-    func analyzeStyle() async throws
+    func analyzeStyle(onProgress: (@Sendable (Double) -> Void)?) async throws -> StyleAnalysisResult
 }
 
 protocol AIPipelineProtocol: Sendable {
@@ -56,6 +56,7 @@ protocol APIKeyStoreProtocol: Sendable {
 protocol DependencyContainerProtocol: AnyObject {
     var messageImportService: MessageImportServiceProtocol { get }
     var conversationStore: ConversationStore { get }
+    var styleProfileStore: StyleProfileStore { get }
     var styleEngine: StyleEngineProtocol { get }
     var aiPipeline: AIPipelineProtocol { get }
     var calendarService: CalendarServiceProtocol { get }

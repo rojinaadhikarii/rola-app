@@ -79,29 +79,34 @@ struct PrivacyBullet: View {
 
 struct ImportProgressView: View {
     let progress: Double
+    var phase: ImportPhase = .importingMessages
     var errorMessage: String?
 
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
             if let errorMessage {
-                VStack(spacing: Theme.Spacing.md) {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.system(size: 32, weight: .medium))
-                        .foregroundStyle(Theme.Colors.warning)
-
-                    Text("Import failed")
-                        .font(Theme.Typography.title2)
-                        .foregroundStyle(Theme.Colors.textPrimary)
-
-                    Text(errorMessage)
-                        .font(Theme.Typography.body)
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: 360)
-                }
+                errorContent(message: errorMessage)
             } else {
                 progressContent
             }
+        }
+    }
+
+    private func errorContent(message: String) -> some View {
+        VStack(spacing: Theme.Spacing.md) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 32, weight: .medium))
+                .foregroundStyle(Theme.Colors.warning)
+
+            Text("Import failed")
+                .font(Theme.Typography.title2)
+                .foregroundStyle(Theme.Colors.textPrimary)
+
+            Text(message)
+                .font(Theme.Typography.body)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 360)
         }
     }
 
@@ -119,17 +124,17 @@ struct ImportProgressView: View {
                     .rotationEffect(.degrees(-90))
                     .animation(Theme.Motion.fast, value: progress)
 
-                Image(systemName: "arrow.down.message")
+                Image(systemName: phase == .analyzingStyle ? "text.bubble" : "arrow.down.message")
                     .font(.system(size: 22, weight: .medium))
                     .foregroundStyle(Theme.Colors.accent)
             }
 
             VStack(spacing: Theme.Spacing.sm) {
-                Text("Importing conversations")
+                Text(phase.title)
                     .font(Theme.Typography.title2)
                     .foregroundStyle(Theme.Colors.textPrimary)
 
-                Text("Reading your iMessage history…")
+                Text(phase.subtitle)
                     .font(Theme.Typography.body)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }

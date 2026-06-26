@@ -79,7 +79,72 @@ enum MockConversationData {
 }
 
 struct MockStyleEngine: StyleEngineProtocol {
-    func analyzeStyle() async throws {}
+    func analyzeStyle(onProgress: (@Sendable (Double) -> Void)?) async throws -> StyleAnalysisResult {
+        onProgress?(0.5)
+        try await Task.sleep(for: .milliseconds(200))
+        onProgress?(1.0)
+        return MockStyleData.sampleResult
+    }
+}
+
+enum MockStyleData {
+    static let sampleResult: StyleAnalysisResult = {
+        let globalTraits = StyleTraits(
+            averageWordCount: 8.2,
+            averageCharacterCount: 42,
+            emojiRate: 0.35,
+            exclamationRate: 0.2,
+            questionRate: 0.15,
+            lowercaseRate: 0.7,
+            slangRate: 0.18,
+            topWords: ["yeah", "sounds", "love", "down", "tomorrow"],
+            topEmojis: ["😂", "❤️", "👍"],
+            commonGreetings: ["hey", "hi"],
+            commonSignOffs: ["thanks", "sounds good"],
+            messageCount: 248
+        )
+
+        let momTraits = StyleTraits(
+            averageWordCount: 4.5,
+            averageCharacterCount: 22,
+            emojiRate: 0.6,
+            exclamationRate: 0.1,
+            questionRate: 0.05,
+            lowercaseRate: 0.5,
+            slangRate: 0.05,
+            topWords: ["yep", "home", "love"],
+            topEmojis: ["❤️", "🏠"],
+            commonGreetings: ["hey"],
+            commonSignOffs: ["love you"],
+            messageCount: 64
+        )
+
+        let bossTraits = StyleTraits(
+            averageWordCount: 11.0,
+            averageCharacterCount: 58,
+            emojiRate: 0.02,
+            exclamationRate: 0.05,
+            questionRate: 0.1,
+            lowercaseRate: 0.1,
+            slangRate: 0.0,
+            topWords: ["works", "thanks", "meeting", "schedule"],
+            topEmojis: [],
+            commonGreetings: ["hi"],
+            commonSignOffs: ["thanks"],
+            messageCount: 42
+        )
+
+        return StyleAnalysisResult(
+            globalProfile: .global(traits: globalTraits),
+            contactProfiles: [
+                .contact(chatId: 2, displayName: "Mom", isGroup: false, traits: momTraits),
+                .contact(chatId: 1, displayName: "Alex Kim", isGroup: false, traits: globalTraits),
+                .contact(chatId: 3, displayName: "Work Team", isGroup: true, traits: bossTraits),
+            ],
+            analyzedAt: Date(),
+            totalMessagesAnalyzed: 248
+        )
+    }()
 }
 
 struct MockAIPipeline: AIPipelineProtocol {

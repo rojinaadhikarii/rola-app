@@ -8,6 +8,7 @@ final class DependencyContainer: DependencyContainerProtocol {
 
     let messageImportService: MessageImportServiceProtocol
     let conversationStore: ConversationStore
+    let styleProfileStore: StyleProfileStore
     let styleEngine: StyleEngineProtocol
     let aiPipeline: AIPipelineProtocol
     let calendarService: CalendarServiceProtocol
@@ -18,7 +19,7 @@ final class DependencyContainer: DependencyContainerProtocol {
 
     init(
         messageImportService: MessageImportServiceProtocol? = nil,
-        styleEngine: StyleEngineProtocol = MockStyleEngine(),
+        styleEngine: StyleEngineProtocol? = nil,
         aiPipeline: AIPipelineProtocol = MockAIPipeline(),
         calendarService: CalendarServiceProtocol? = nil,
         contactsService: ContactsServiceProtocol? = nil,
@@ -26,19 +27,22 @@ final class DependencyContainer: DependencyContainerProtocol {
         permissionManager: PermissionManagerProtocol? = nil,
         apiKeyStore: APIKeyStoreProtocol = KeychainAPIKeyStore(),
         useMockPermissions: Bool = false,
-        useMockImport: Bool = false
+        useMockImport: Bool = false,
+        useMockStyle: Bool = false
     ) {
         let calendar = calendarService ?? (useMockPermissions ? MockCalendarService() : CalendarService())
         let contacts = contactsService ?? (useMockPermissions ? MockContactsService() : ContactsService())
         let notifications = notificationService ?? (useMockPermissions ? MockNotificationService() : NotificationService())
         let importService = messageImportService ?? (useMockImport ? MockMessageImportService() : MessageImportService())
+        let style = styleEngine ?? (useMockStyle ? MockStyleEngine() : StyleEngine())
 
         self.calendarService = calendar
         self.contactsService = contacts
         self.notificationService = notifications
         self.messageImportService = importService
+        self.styleEngine = style
         self.conversationStore = ConversationStore(importService: importService)
-        self.styleEngine = styleEngine
+        self.styleProfileStore = StyleProfileStore(styleEngine: style)
         self.aiPipeline = aiPipeline
         self.permissionManager = permissionManager ?? PermissionManager(
             contactsService: contacts,
@@ -49,5 +53,5 @@ final class DependencyContainer: DependencyContainerProtocol {
     }
 
     static let live = DependencyContainer()
-    static let preview = DependencyContainer(useMockPermissions: true, useMockImport: true)
+    static let preview = DependencyContainer(useMockPermissions: true, useMockImport: true, useMockStyle: true)
 }

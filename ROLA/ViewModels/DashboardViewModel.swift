@@ -5,6 +5,7 @@ import Foundation
 enum DashboardFilter: String, CaseIterable, Identifiable {
     case needsAttention
     case all
+    case yourStyle
     case suggestions
     case followUps
 
@@ -14,6 +15,7 @@ enum DashboardFilter: String, CaseIterable, Identifiable {
         switch self {
         case .needsAttention: "Needs Attention"
         case .all: "All"
+        case .yourStyle: "Your Style"
         case .suggestions: "Suggestions"
         case .followUps: "Follow-ups"
         }
@@ -27,11 +29,13 @@ enum DashboardFilter: String, CaseIterable, Identifiable {
 final class DashboardViewModel {
 
     private let conversationStore: ConversationStore
+    private let styleProfileStore: StyleProfileStore
 
     var selectedFilter: DashboardFilter = .needsAttention
 
-    init(conversationStore: ConversationStore) {
+    init(conversationStore: ConversationStore, styleProfileStore: StyleProfileStore) {
         self.conversationStore = conversationStore
+        self.styleProfileStore = styleProfileStore
     }
 
     var conversations: [Conversation] {
@@ -44,7 +48,7 @@ final class DashboardViewModel {
             conversationStore.needsAttention
         case .all:
             conversationStore.conversations
-        case .suggestions, .followUps:
+        case .yourStyle, .suggestions, .followUps:
             []
         }
     }
@@ -73,12 +77,30 @@ final class DashboardViewModel {
         conversationStore.importError
     }
 
+    var styleAnalysisResult: StyleAnalysisResult? {
+        styleProfileStore.analysisResult
+    }
+
+    var isAnalyzingStyle: Bool {
+        styleProfileStore.isAnalyzing
+    }
+
+    var styleAnalysisError: String? {
+        styleProfileStore.analysisError
+    }
+
+    var hasStyleProfile: Bool {
+        styleProfileStore.hasProfile
+    }
+
     func count(for filter: DashboardFilter) -> Int {
         switch filter {
         case .needsAttention:
             conversationStore.needsAttention.count
         case .all:
             conversationStore.conversations.count
+        case .yourStyle:
+            styleProfileStore.hasProfile ? 1 : 0
         case .suggestions, .followUps:
             0
         }
@@ -86,6 +108,9 @@ final class DashboardViewModel {
 
     func selectFilter(_ filter: DashboardFilter) {
         selectedFilter = filter
+        if filter == .yourStyle {
+            Task { await conversationStore.selectConversation(nil) }
+        }
     }
 
     func selectConversation(_ conversation: Conversation) async {
@@ -94,5 +119,8 @@ final class DashboardViewModel {
 
     func refresh() async {
         await conversationStore.refresh()
+        if conversationStore.importError == nil {
+            await styleProfileStore.analyze()
+        }
     }
 }

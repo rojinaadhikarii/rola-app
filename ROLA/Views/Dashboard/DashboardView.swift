@@ -7,7 +7,8 @@ struct DashboardView: View {
     @State private var viewModel: DashboardViewModel?
 
     var body: some View {
-        @Bindable var store = appState.conversationStore
+        @Bindable var conversationStore = appState.conversationStore
+        @Bindable var styleStore = appState.styleProfileStore
 
         VStack(spacing: 0) {
             if let viewModel {
@@ -21,12 +22,14 @@ struct DashboardView: View {
         }
         .onAppear {
             if viewModel == nil {
-                viewModel = DashboardViewModel(conversationStore: store)
+                viewModel = DashboardViewModel(
+                    conversationStore: conversationStore,
+                    styleProfileStore: styleStore
+                )
             }
         }
-        .onChange(of: store.conversations.count) { _, _ in
-            // Ensure sidebar counts stay in sync after import.
-        }
+        .onChange(of: conversationStore.conversations.count) { _, _ in }
+        .onChange(of: styleStore.hasProfile) { _, _ in }
     }
 
     private func dashboardHeader(viewModel: DashboardViewModel) -> some View {
@@ -53,7 +56,11 @@ struct DashboardView: View {
                     value: viewModel.inboxCount > 0 ? "\(viewModel.inboxCount)" : "—",
                     icon: "tray"
                 )
-                statPill(label: "Streak", value: "—", icon: "flame")
+                statPill(
+                    label: "Style",
+                    value: viewModel.hasStyleProfile ? "✓" : "—",
+                    icon: "text.bubble"
+                )
                 statPill(label: "Saved", value: "—", icon: "clock")
 
                 ROLAIconButton(systemImage: "arrow.clockwise") {
@@ -91,6 +98,7 @@ struct DashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous))
     }
 
+    @ViewBuilder
     private func dashboardContent(viewModel: DashboardViewModel) -> some View {
         HStack(spacing: 0) {
             sidebar(viewModel: viewModel)
@@ -99,13 +107,21 @@ struct DashboardView: View {
             Divider()
                 .background(Theme.Colors.borderSubtle)
 
-            conversationList(viewModel: viewModel)
-                .frame(width: 300)
+            if viewModel.selectedFilter == .yourStyle {
+                CommunicationProfileView(
+                    result: viewModel.styleAnalysisResult,
+                    isLoading: viewModel.isAnalyzingStyle,
+                    errorMessage: viewModel.styleAnalysisError
+                )
+            } else {
+                conversationList(viewModel: viewModel)
+                    .frame(width: 300)
 
-            Divider()
-                .background(Theme.Colors.borderSubtle)
+                Divider()
+                    .background(Theme.Colors.borderSubtle)
 
-            detailPane(viewModel: viewModel)
+                detailPane(viewModel: viewModel)
+            }
         }
     }
 
@@ -116,8 +132,7 @@ struct DashboardView: View {
                     title: filter.title,
                     count: viewModel.count(for: filter),
                     isSelected: viewModel.selectedFilter == filter,
-                    isEnabled: filter == .needsAttention || filter == .all
-                        || viewModel.count(for: filter) > 0
+                    isEnabled: isFilterEnabled(filter, viewModel: viewModel)
                 ) {
                     viewModel.selectFilter(filter)
                 }
@@ -134,6 +149,15 @@ struct DashboardView: View {
         }
         .padding(Theme.Spacing.md)
         .background(Theme.Colors.background)
+    }
+
+    private func isFilterEnabled(_ filter: DashboardFilter, viewModel: DashboardViewModel) -> Bool {
+        switch filter {
+        case .needsAttention, .all, .yourStyle:
+            true
+        case .suggestions, .followUps:
+            viewModel.count(for: filter) > 0
+        }
     }
 
     private func sidebarItem(
@@ -153,9 +177,11 @@ struct DashboardView: View {
 
                 Spacer()
 
-                Text("\(count)")
-                    .font(Theme.Typography.caption)
-                    .foregroundStyle(Theme.Colors.textTertiary)
+                if count > 0 || title == "Your Style" {
+                    Text(title == "Your Style" && count > 0 ? "✓" : "\(count)")
+                        .font(Theme.Typography.caption)
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                }
             }
             .padding(.horizontal, Theme.Spacing.md)
             .padding(.vertical, Theme.Spacing.sm)
@@ -198,11 +224,18 @@ struct DashboardView: View {
     @ViewBuilder
     private func detailPane(viewModel: DashboardViewModel) -> some View {
         if let conversation = viewModel.selectedConversation {
-            ConversationDetailView(
-                conversation: conversation,
-                messages: viewModel.selectedMessages,
-                isLoading: viewModel.isLoadingMessages
-            )
+            VStack(spacing: 0) {
+                ConversationDetailView(
+                    conversation: conversation,
+                    messages: viewModel.selectedMessages,
+                    isLoading: viewModel.isLoadingMessages
+                )
+
+                if let contactProfile = appState.styleProfileStore.profile(for: conversation.id) {
+                    Divider().background(Theme.Colors.borderSubtle)
+                    contactStyleBanner(profile: contactProfile)
+                }
+            }
         } else if viewModel.conversations.isEmpty {
             EmptyStateView(
                 systemImage: "message",
@@ -223,6 +256,28 @@ struct DashboardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.Colors.background)
         }
+    }
+
+    private func contactStyleBanner(profile: StyleProfile) -> some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Image(systemName: "text.bubble")
+                .foregroundStyle(Theme.Colors.accent)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Your tone with \(profile.displayName ?? "them")")
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+
+                Text(profile.traits.toneSummary.capitalized)
+                    .font(Theme.Typography.caption2)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, Theme.Spacing.lg)
+        .padding(.vertical, Theme.Spacing.md)
+        .background(Theme.Colors.surface)
     }
 
     @ViewBuilder
@@ -262,6 +317,8 @@ struct DashboardView: View {
         .frame(width: 960, height: 640)
         .rolaBackground()
         .task {
-            await AppState(container: .preview).conversationStore.importConversations()
+            let state = AppState(container: .preview)
+            await state.conversationStore.importConversations()
+            await state.styleProfileStore.analyze()
         }
 }
