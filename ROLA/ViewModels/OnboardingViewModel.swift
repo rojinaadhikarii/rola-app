@@ -77,6 +77,6 @@ final class OnboardingViewModel {
     }
 
     func continueFromPermissions() async {
-        await appState.simulateImport()
+        await appState.importMessages()
     }
 }

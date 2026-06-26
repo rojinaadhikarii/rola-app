@@ -16,12 +16,20 @@ swift_files = [
     "ROLA/App/AppState.swift",
     "ROLA/App/DependencyContainer.swift",
     "ROLA/Models/AppRoute.swift",
+    "ROLA/Models/Conversation.swift",
+    "ROLA/Models/ImportedMessage.swift",
+    "ROLA/Database/ChatDB/ChatDBError.swift",
+    "ROLA/Database/ChatDB/AppleDateConverter.swift",
+    "ROLA/Database/ChatDB/AttributedBodyDecoder.swift",
+    "ROLA/Database/ChatDB/ChatDBReader.swift",
+    "ROLA/Database/Local/ConversationStore.swift",
     "ROLA/Utilities/Theme.swift",
     "ROLA/Utilities/KeychainHelper.swift",
     "ROLA/Utilities/PermissionStatusMapper.swift",
     "ROLA/Utilities/PermissionRefreshObserver.swift",
     "ROLA/Services/Protocols/ServiceProtocols.swift",
     "ROLA/Services/Mock/MockServices.swift",
+    "ROLA/Services/MessageImport/MessageImportService.swift",
     "ROLA/Services/Contacts/ContactsService.swift",
     "ROLA/Services/Calendar/CalendarService.swift",
     "ROLA/Services/Notifications/NotificationService.swift",
@@ -29,11 +37,14 @@ swift_files = [
     "ROLA/Permissions/FullDiskAccessChecker.swift",
     "ROLA/Permissions/SystemSettingsURLs.swift",
     "ROLA/ViewModels/OnboardingViewModel.swift",
+    "ROLA/ViewModels/DashboardViewModel.swift",
     "ROLA/Components/ROLAButton.swift",
     "ROLA/Components/PageIndicator.swift",
     "ROLA/Components/EmptyStateView.swift",
     "ROLA/Components/PermissionCard.swift",
     "ROLA/Components/FullDiskAccessGuideSheet.swift",
+    "ROLA/Components/ConversationRow.swift",
+    "ROLA/Components/ConversationDetailView.swift",
     "ROLA/Components/ROLALogoMark.swift",
     "ROLA/Views/Onboarding/OnboardingContainerView.swift",
     "ROLA/Views/Onboarding/WelcomeView.swift",
@@ -86,6 +97,10 @@ subgroups = {
     "Services": gen_id(),
     "Protocols": gen_id(),
     "Mock": gen_id(),
+    "MessageImport": gen_id(),
+    "Database": gen_id(),
+    "ChatDB": gen_id(),
+    "Local": gen_id(),
     "Contacts": gen_id(),
     "Calendar": gen_id(),
     "Notifications": gen_id(),
@@ -197,10 +212,13 @@ settings_children = [file_refs[f] for f in swift_files if "Settings" in f]
 app_children = [file_refs[f] for f in swift_files if "/App/" in f]
 models_children = [file_refs[f] for f in swift_files if "/Models/" in f]
 utils_children = [file_refs[f] for f in swift_files if "/Utilities/" in f]
+chatdb_children = [file_refs[f] for f in swift_files if "/Database/ChatDB/" in f]
+local_children = [file_refs[f] for f in swift_files if "/Database/Local/" in f]
 protocols_children = [file_refs["ROLA/Services/Protocols/ServiceProtocols.swift"]]
 mock_children = [file_refs["ROLA/Services/Mock/MockServices.swift"]]
+message_import_children = [file_refs["ROLA/Services/MessageImport/MessageImportService.swift"]]
 perms_children = [file_refs[f] for f in swift_files if "/Permissions/" in f]
-vm_children = [file_refs["ROLA/ViewModels/OnboardingViewModel.swift"]]
+vm_children = [file_refs[f] for f in swift_files if "/ViewModels/" in f]
 comp_children = [file_refs[f] for f in swift_files if "/Components/" in f]
 
 contacts_children = [file_refs["ROLA/Services/Contacts/ContactsService.swift"]]
@@ -211,8 +229,18 @@ for name, gid, children, path in [
     ("Contacts", subgroups["Contacts"], contacts_children, "Contacts"),
     ("Calendar", subgroups["Calendar"], calendar_children, "Calendar"),
     ("Notifications", subgroups["Notifications"], notifications_children, "Notifications"),
+    ("MessageImport", subgroups["MessageImport"], message_import_children, "MessageImport"),
 ]:
     out.extend(group_block(gid, name, children, path))
+
+for name, gid, children, path in [
+    ("ChatDB", subgroups["ChatDB"], chatdb_children, "ChatDB"),
+    ("Local", subgroups["Local"], local_children, "Local"),
+]:
+    out.extend(group_block(gid, name, children, path))
+
+database_children = [subgroups["ChatDB"], subgroups["Local"]]
+out.extend(group_block(subgroups["Database"], "Database", database_children, "Database"))
 
 for name, gid, children, path in [
     ("Onboarding", subgroups["Onboarding"], onboarding_children, "Onboarding"),
@@ -232,6 +260,7 @@ for name, gid, children, path in [
 services_children = [
     subgroups["Protocols"],
     subgroups["Mock"],
+    subgroups["MessageImport"],
     subgroups["Contacts"],
     subgroups["Calendar"],
     subgroups["Notifications"],
@@ -244,6 +273,7 @@ out.extend(group_block(subgroups["Views"], "Views", views_children, "Views"))
 rola_children = [
     subgroups["App"],
     subgroups["Models"],
+    subgroups["Database"],
     subgroups["Utilities"],
     subgroups["Services"],
     subgroups["Permissions"],
@@ -457,6 +487,7 @@ target_debug = [
     "PRODUCT_NAME = \"$(TARGET_NAME)\";",
     "SWIFT_EMIT_LOC_STRINGS = YES;",
     "SWIFT_VERSION = 6.0;",
+    "OTHER_LDFLAGS = (\"$(inherited)\", \"-lsqlite3\");",
 ]
 target_release = target_debug.copy()
 out.extend(config_block(debug_target, "Debug", target_debug))

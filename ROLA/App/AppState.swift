@@ -23,6 +23,10 @@ final class AppState {
 
     let container: DependencyContainer
 
+    var conversationStore: ConversationStore {
+        container.conversationStore
+    }
+
     // MARK: Init
 
     init(container: DependencyContainer) {
@@ -31,6 +35,10 @@ final class AppState {
         self.hasCompletedOnboarding = completed
         self.route = completed ? .dashboard : .onboarding
         self.onboardingStep = .welcome
+
+        if completed {
+            Task { await container.conversationStore.refresh() }
+        }
     }
 
     // MARK: Onboarding Actions
@@ -81,19 +89,33 @@ final class AppState {
         }
     }
 
-    // MARK: Import Simulation (Milestone 1 placeholder)
+    // MARK: Message Import
 
-    func simulateImport() async {
+    func importMessages() async {
         isImporting = true
         importProgress = 0
 
-        for step in 1...10 {
-            try? await Task.sleep(for: .milliseconds(200))
-            importProgress = Double(step) / 10.0
+        await conversationStore.importConversations { [weak self] progress in
+            Task { @MainActor in
+                self?.importProgress = progress
+            }
         }
 
         isImporting = false
+        importProgress = 1.0
+
+        if conversationStore.importError == nil {
+            completeOnboarding()
+        }
+    }
+
+    /// Skip import but still complete onboarding (for testing).
+    func skipImport() async {
         completeOnboarding()
+    }
+
+    var importError: String? {
+        conversationStore.importError
     }
 
     private static let onboardingKey = "com.rola.app.onboarding-complete"

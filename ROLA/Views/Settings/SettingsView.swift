@@ -23,6 +23,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
+                    messagesSection
                     apiKeySection
                     aboutSection
                 }
@@ -48,6 +49,46 @@ struct SettingsView: View {
         }
         .padding(.horizontal, Theme.Spacing.lg)
         .padding(.vertical, Theme.Spacing.md)
+    }
+
+    private var messagesSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            sectionTitle("Messages")
+
+            HStack {
+                Text("Imported conversations")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                Spacer()
+                Text("\(appState.conversationStore.conversations.count)")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+            }
+
+            if let lastImport = appState.conversationStore.lastImportDate {
+                HStack {
+                    Text("Last import")
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                    Spacer()
+                    Text(lastImport.formatted(date: .abbreviated, time: .shortened))
+                        .font(Theme.Typography.callout)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+                }
+            }
+
+            ROLAButton(
+                title: "Re-import Messages",
+                style: .secondary,
+                systemImage: "arrow.clockwise",
+                isLoading: appState.conversationStore.isImporting
+            ) {
+                Task { await appState.conversationStore.refresh() }
+            }
+            .frame(maxWidth: 220)
+        }
+        .padding(Theme.Spacing.lg)
+        .rolaCard()
     }
 
     private var apiKeySection: some View {
@@ -123,7 +164,7 @@ struct SettingsView: View {
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Spacer()
-                Text("0.2.0 (Milestone 2)")
+                Text("0.3.0 (Milestone 3)")
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textPrimary)
             }

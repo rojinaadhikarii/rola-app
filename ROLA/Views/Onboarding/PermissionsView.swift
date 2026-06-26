@@ -46,6 +46,14 @@ struct PermissionsView: View {
       Spacer()
 
       VStack(spacing: Theme.Spacing.md) {
+        if let error = appState.importError {
+          Text(error)
+            .font(Theme.Typography.caption)
+            .foregroundStyle(Theme.Colors.error)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: 400)
+        }
+
         if !viewModel.allRequiredPermissionsGranted {
           Text(requiredPermissionsHint)
             .font(Theme.Typography.caption)
@@ -69,7 +77,7 @@ struct PermissionsView: View {
 
         Button("Skip for now") {
           Task {
-            await appState.simulateImport()
+            await appState.skipImport()
           }
         }
         .buttonStyle(.plain)

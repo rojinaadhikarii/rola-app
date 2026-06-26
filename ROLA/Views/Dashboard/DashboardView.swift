@@ -4,19 +4,32 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(AppState.self) private var appState
+    @State private var viewModel: DashboardViewModel?
 
     var body: some View {
+        @Bindable var store = appState.conversationStore
+
         VStack(spacing: 0) {
-            dashboardHeader
+            if let viewModel {
+                dashboardHeader(viewModel: viewModel)
 
-            Divider()
-                .background(Theme.Colors.borderSubtle)
+                Divider()
+                    .background(Theme.Colors.borderSubtle)
 
-            dashboardContent
+                dashboardContent(viewModel: viewModel)
+            }
+        }
+        .onAppear {
+            if viewModel == nil {
+                viewModel = DashboardViewModel(conversationStore: store)
+            }
+        }
+        .onChange(of: store.conversations.count) { _, _ in
+            // Ensure sidebar counts stay in sync after import.
         }
     }
 
-    private var dashboardHeader: some View {
+    private func dashboardHeader(viewModel: DashboardViewModel) -> some View {
         HStack {
             HStack(spacing: Theme.Spacing.md) {
                 ROLALogoMark(size: 28)
@@ -35,9 +48,17 @@ struct DashboardView: View {
             Spacer()
 
             HStack(spacing: Theme.Spacing.sm) {
-                statPill(label: "Inbox", value: "—", icon: "tray")
+                statPill(
+                    label: "Inbox",
+                    value: viewModel.inboxCount > 0 ? "\(viewModel.inboxCount)" : "—",
+                    icon: "tray"
+                )
                 statPill(label: "Streak", value: "—", icon: "flame")
                 statPill(label: "Saved", value: "—", icon: "clock")
+
+                ROLAIconButton(systemImage: "arrow.clockwise") {
+                    Task { await viewModel.refresh() }
+                }
 
                 ROLAIconButton(systemImage: "gearshape") {
                     appState.openSettings()
@@ -70,59 +91,168 @@ struct DashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous))
     }
 
-    private var dashboardContent: some View {
+    private func dashboardContent(viewModel: DashboardViewModel) -> some View {
         HStack(spacing: 0) {
-            sidebar
-                .frame(width: 240)
+            sidebar(viewModel: viewModel)
+                .frame(width: 200)
 
             Divider()
                 .background(Theme.Colors.borderSubtle)
 
-            mainContent
+            conversationList(viewModel: viewModel)
+                .frame(width: 300)
+
+            Divider()
+                .background(Theme.Colors.borderSubtle)
+
+            detailPane(viewModel: viewModel)
         }
     }
 
-    private var sidebar: some View {
+    private func sidebar(viewModel: DashboardViewModel) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-            sidebarItem(title: "Needs Attention", count: 0, isSelected: true)
-            sidebarItem(title: "Suggestions", count: 0, isSelected: false)
-            sidebarItem(title: "Follow-ups", count: 0, isSelected: false)
+            ForEach(DashboardFilter.allCases) { filter in
+                sidebarItem(
+                    title: filter.title,
+                    count: viewModel.count(for: filter),
+                    isSelected: viewModel.selectedFilter == filter,
+                    isEnabled: filter == .needsAttention || filter == .all
+                        || viewModel.count(for: filter) > 0
+                ) {
+                    viewModel.selectFilter(filter)
+                }
+            }
 
             Spacer()
+
+            if let lastImport = viewModel.lastImportDate {
+                Text("Imported \(lastImport.formatted(date: .abbreviated, time: .shortened))")
+                    .font(Theme.Typography.caption2)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .padding(.horizontal, Theme.Spacing.sm)
+            }
         }
         .padding(Theme.Spacing.md)
         .background(Theme.Colors.background)
     }
 
-    private func sidebarItem(title: String, count: Int, isSelected: Bool) -> some View {
-        HStack {
-            Text(title)
-                .font(Theme.Typography.callout)
-                .foregroundStyle(isSelected ? Theme.Colors.textPrimary : Theme.Colors.textSecondary)
+    private func sidebarItem(
+        title: String,
+        count: Int,
+        isSelected: Bool,
+        isEnabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(title)
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(
+                        isSelected ? Theme.Colors.textPrimary : Theme.Colors.textSecondary
+                    )
 
-            Spacer()
+                Spacer()
 
-            Text("\(count)")
-                .font(Theme.Typography.caption)
-                .foregroundStyle(Theme.Colors.textTertiary)
+                Text("\(count)")
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
+            .padding(.horizontal, Theme.Spacing.md)
+            .padding(.vertical, Theme.Spacing.sm)
+            .background(isSelected ? Theme.Colors.surfaceElevated : Color.clear)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous))
         }
-        .padding(.horizontal, Theme.Spacing.md)
-        .padding(.vertical, Theme.Spacing.sm)
-        .background(isSelected ? Theme.Colors.surfaceElevated : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.md, style: .continuous))
+        .buttonStyle(.plain)
+        .disabled(!isEnabled && !isSelected)
+        .opacity(isEnabled || isSelected ? 1 : 0.45)
     }
 
-    private var mainContent: some View {
-        EmptyStateView(
-            systemImage: "message",
-            title: "Import your messages to get started",
-            message: "Once ROLA has access to your iMessage history, you'll see conversations that need your attention — with AI reply suggestions that sound like you.",
-            actionTitle: "Reset Onboarding"
-        ) {
-            appState.resetOnboarding()
+    private func conversationList(viewModel: DashboardViewModel) -> some View {
+        Group {
+            if viewModel.filteredConversations.isEmpty {
+                emptyListState(viewModel: viewModel)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: Theme.Spacing.xs) {
+                        ForEach(viewModel.filteredConversations) { conversation in
+                            Button {
+                                Task {
+                                    await viewModel.selectConversation(conversation)
+                                }
+                            } label: {
+                                ConversationRow(
+                                    conversation: conversation,
+                                    isSelected: viewModel.selectedConversation?.id == conversation.id
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(Theme.Spacing.sm)
+                }
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Colors.background)
+    }
+
+    @ViewBuilder
+    private func detailPane(viewModel: DashboardViewModel) -> some View {
+        if let conversation = viewModel.selectedConversation {
+            ConversationDetailView(
+                conversation: conversation,
+                messages: viewModel.selectedMessages,
+                isLoading: viewModel.isLoadingMessages
+            )
+        } else if viewModel.conversations.isEmpty {
+            EmptyStateView(
+                systemImage: "message",
+                title: "No conversations imported",
+                message: "Import your iMessage history to see conversations that need your attention.",
+                actionTitle: "Reset Onboarding"
+            ) {
+                appState.resetOnboarding()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.Colors.background)
+        } else {
+            EmptyStateView(
+                systemImage: "bubble.left.and.bubble.right",
+                title: "Select a conversation",
+                message: "Choose a thread to preview recent messages. AI suggestions arrive in a future milestone."
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.Colors.background)
+        }
+    }
+
+    @ViewBuilder
+    private func emptyListState(viewModel: DashboardViewModel) -> some View {
+        if viewModel.conversations.isEmpty {
+            VStack(spacing: Theme.Spacing.md) {
+                Image(systemName: "tray")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Theme.Colors.textTertiary)
+                Text("No conversations")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            VStack(spacing: Theme.Spacing.md) {
+                Image(systemName: "checkmark.circle")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Theme.Colors.success)
+                Text("All caught up")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                Text("No messages need your attention right now.")
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Theme.Spacing.md)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
 }
 
@@ -131,4 +261,7 @@ struct DashboardView: View {
         .environment(AppState(container: .preview))
         .frame(width: 960, height: 640)
         .rolaBackground()
+        .task {
+            await AppState(container: .preview).conversationStore.importConversations()
+        }
 }

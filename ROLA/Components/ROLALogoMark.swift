@@ -79,8 +79,33 @@ struct PrivacyBullet: View {
 
 struct ImportProgressView: View {
     let progress: Double
+    var errorMessage: String?
 
     var body: some View {
+        VStack(spacing: Theme.Spacing.lg) {
+            if let errorMessage {
+                VStack(spacing: Theme.Spacing.md) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 32, weight: .medium))
+                        .foregroundStyle(Theme.Colors.warning)
+
+                    Text("Import failed")
+                        .font(Theme.Typography.title2)
+                        .foregroundStyle(Theme.Colors.textPrimary)
+
+                    Text(errorMessage)
+                        .font(Theme.Typography.body)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 360)
+                }
+            } else {
+                progressContent
+            }
+        }
+    }
+
+    private var progressContent: some View {
         VStack(spacing: Theme.Spacing.lg) {
             ZStack {
                 Circle()
@@ -104,7 +129,7 @@ struct ImportProgressView: View {
                     .font(Theme.Typography.title2)
                     .foregroundStyle(Theme.Colors.textPrimary)
 
-                Text("Analyzing your communication style…")
+                Text("Reading your iMessage history…")
                     .font(Theme.Typography.body)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }

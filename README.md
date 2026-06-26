@@ -16,6 +16,14 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 3 — What's Included
+
+- **iMessage import** — read-only SQLite access to `~/Library/Messages/chat.db`
+- **Conversation list** — threads sorted by recency with needs-reply detection
+- **Message preview** — tap a conversation to see recent messages
+- **Disk cache** — conversations cached in Application Support for fast reload
+- **Dashboard refresh** — re-import button in header
+
 ## Milestone 2 — What's Included
 
 - **Full Disk Access detection** — probes iMessage `chat.db` readability
@@ -68,8 +76,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 | Milestone | Status |
 |-----------|--------|
 | M1 — App shell + onboarding UI | ✅ Complete |
-| M2 — Real permissions | ✅ Current |
-| M3 — iMessage import | Planned |
+| M2 — Real permissions | ✅ Complete |
+| M3 — iMessage import | ✅ Current |
 | M4 — Style analysis | Planned |
 | M5 — Calendar integration | Planned |
 | M6 — AI pipeline | Planned |

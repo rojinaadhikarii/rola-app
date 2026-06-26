@@ -3,7 +3,8 @@ import Foundation
 // MARK: - Service Protocols
 
 protocol MessageImportServiceProtocol: Sendable {
-    func importConversations() async throws -> Int
+    func importConversations(onProgress: (@Sendable (Double) -> Void)?) async throws -> [Conversation]
+    func fetchRecentMessages(chatId: Int64, limit: Int) async throws -> [ImportedMessage]
 }
 
 protocol StyleEngineProtocol: Sendable {
@@ -54,6 +55,7 @@ protocol APIKeyStoreProtocol: Sendable {
 @MainActor
 protocol DependencyContainerProtocol: AnyObject {
     var messageImportService: MessageImportServiceProtocol { get }
+    var conversationStore: ConversationStore { get }
     var styleEngine: StyleEngineProtocol { get }
     var aiPipeline: AIPipelineProtocol { get }
     var calendarService: CalendarServiceProtocol { get }
