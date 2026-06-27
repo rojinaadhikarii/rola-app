@@ -7,8 +7,10 @@ import UserNotifications
 final class NotificationService: NotificationServiceProtocol {
 
     private var cachedStatus: PermissionStatus = .notDetermined
+    private let scheduler: NotificationScheduler
 
-    init() {
+    init(scheduler: NotificationScheduler = NotificationScheduler()) {
+        self.scheduler = scheduler
         Task { await refreshAuthorizationStatus() }
     }
 
@@ -35,5 +37,9 @@ final class NotificationService: NotificationServiceProtocol {
         let status = PermissionStatusMapper.from(notifications: settings.authorizationStatus)
         cachedStatus = status
         return status
+    }
+
+    func sendTestNotification() async throws {
+        try await scheduler.sendTestNotification()
     }
 }

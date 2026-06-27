@@ -22,6 +22,7 @@ swift_files = [
     "ROLA/Models/CalendarContext.swift",
     "ROLA/Models/ReplySuggestion.swift",
     "ROLA/Models/SupabaseModels.swift",
+    "ROLA/Models/NotificationPreferences.swift",
     "ROLA/Database/ChatDB/ChatDBError.swift",
     "ROLA/Database/ChatDB/AppleDateConverter.swift",
     "ROLA/Database/ChatDB/AttributedBodyDecoder.swift",
@@ -31,6 +32,7 @@ swift_files = [
     "ROLA/Database/Local/CalendarContextStore.swift",
     "ROLA/Database/Local/SuggestionStore.swift",
     "ROLA/Database/Local/FeedbackStore.swift",
+    "ROLA/Database/Local/NotificationPreferencesStore.swift",
     "ROLA/Database/Supabase/SupabaseClient.swift",
     "ROLA/Database/Supabase/SupabaseAuthService.swift",
     "ROLA/Database/Supabase/SyncService.swift",
@@ -50,6 +52,9 @@ swift_files = [
     "ROLA/Services/Calendar/CalendarService.swift",
     "ROLA/Services/Calendar/AvailabilityChecker.swift",
     "ROLA/Services/Notifications/NotificationService.swift",
+    "ROLA/Services/Notifications/NotificationScheduler.swift",
+    "ROLA/Services/Notifications/InboxMonitor.swift",
+    "ROLA/Services/Notifications/NotificationDelegate.swift",
     "ROLA/AI/Context/SchedulingDetector.swift",
     "ROLA/AI/Context/ContextAssembler.swift",
     "ROLA/AI/OpenAIClient.swift",
@@ -72,6 +77,9 @@ swift_files = [
     "ROLA/Components/CalendarViews.swift",
     "ROLA/Components/ConfidenceBadge.swift",
     "ROLA/Components/SuggestionCard.swift",
+    "ROLA/Components/InboxHealthRing.swift",
+    "ROLA/Components/ToastBanner.swift",
+    "ROLA/Components/ShimmerView.swift",
     "ROLA/Components/ROLALogoMark.swift",
     "ROLA/Views/Onboarding/OnboardingContainerView.swift",
     "ROLA/Views/Onboarding/WelcomeView.swift",
@@ -279,7 +287,12 @@ pipeline_children = [file_refs["ROLA/AI/Pipeline/AIPipeline.swift"]]
 prompts_children = [file_refs["ROLA/AI/Prompts/PromptBuilder.swift"]]
 safety_children = [file_refs["ROLA/AI/Safety/SafetyClassifier.swift"]]
 openai_children = [file_refs["ROLA/AI/OpenAIClient.swift"]]
-notifications_children = [file_refs["ROLA/Services/Notifications/NotificationService.swift"]]
+notifications_children = [
+    file_refs["ROLA/Services/Notifications/NotificationService.swift"],
+    file_refs["ROLA/Services/Notifications/NotificationScheduler.swift"],
+    file_refs["ROLA/Services/Notifications/InboxMonitor.swift"],
+    file_refs["ROLA/Services/Notifications/NotificationDelegate.swift"],
+]
 
 for name, gid, children, path in [
     ("Contacts", subgroups["Contacts"], contacts_children, "Contacts"),

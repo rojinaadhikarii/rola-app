@@ -15,6 +15,9 @@ final class DependencyContainer: DependencyContainerProtocol {
     let feedbackStore: FeedbackStore
     let syncService: SyncService
     let learningService: LearningService
+    let inboxMonitor: InboxMonitor
+    let notificationScheduler: NotificationScheduler
+    let notificationPreferencesStore: NotificationPreferencesStoreProtocol
     let styleEngine: StyleEngineProtocol
     let aiPipeline: AIPipelineProtocol
     let calendarService: CalendarServiceProtocol
@@ -31,6 +34,9 @@ final class DependencyContainer: DependencyContainerProtocol {
         feedbackStore: FeedbackStore? = nil,
         syncService: SyncService? = nil,
         learningService: LearningService? = nil,
+        inboxMonitor: InboxMonitor? = nil,
+        notificationScheduler: NotificationScheduler? = nil,
+        notificationPreferencesStore: NotificationPreferencesStoreProtocol? = nil,
         calendarService: CalendarServiceProtocol? = nil,
         contactsService: ContactsServiceProtocol? = nil,
         notificationService: NotificationServiceProtocol? = nil,
@@ -49,16 +55,21 @@ final class DependencyContainer: DependencyContainerProtocol {
                 : CalendarService()
         )
         let contacts = contactsService ?? (useMockPermissions ? MockContactsService() : ContactsService())
-        let notifications = notificationService ?? (useMockPermissions ? MockNotificationService() : NotificationService())
         let importService = messageImportService ?? (useMockImport ? MockMessageImportService() : MessageImportService())
         let style = styleEngine ?? (useMockStyle ? MockStyleEngine() : StyleEngine())
         let keyStore = apiKeyStore
         let suggestions = suggestionStore ?? SuggestionStore()
         let feedback = feedbackStore ?? FeedbackStore()
+        let preferencesStore = notificationPreferencesStore ?? NotificationPreferencesStore()
+        let scheduler = notificationScheduler ?? NotificationScheduler(preferencesStore: preferencesStore)
+        self.notificationPreferencesStore = preferencesStore
+        self.notificationScheduler = scheduler
 
         self.calendarService = calendar
         self.contactsService = contacts
-        self.notificationService = notifications
+        self.notificationService = notificationService ?? (
+            useMockPermissions ? MockNotificationService() : NotificationService(scheduler: scheduler)
+        )
         self.messageImportService = importService
         self.styleEngine = style
         self.conversationStore = ConversationStore(importService: importService)
@@ -66,6 +77,7 @@ final class DependencyContainer: DependencyContainerProtocol {
         self.calendarContextStore = CalendarContextStore(calendarService: calendar)
         self.suggestionStore = suggestions
         self.feedbackStore = feedback
+        self.inboxMonitor = inboxMonitor ?? InboxMonitor(scheduler: scheduler)
 
         let resolvedSyncService = syncService ?? SyncService(
             feedbackStore: feedback,
@@ -88,7 +100,7 @@ final class DependencyContainer: DependencyContainerProtocol {
         self.permissionManager = permissionManager ?? PermissionManager(
             contactsService: contacts,
             calendarService: calendar,
-            notificationService: notifications
+            notificationService: self.notificationService
         )
         self.apiKeyStore = keyStore
     }

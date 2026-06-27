@@ -9,6 +9,8 @@ struct EmptyStateView: View {
     var actionTitle: String?
     var action: (() -> Void)?
 
+    @State private var isVisible = false
+
     var body: some View {
         VStack(spacing: Theme.Spacing.lg) {
             ZStack {
@@ -20,6 +22,8 @@ struct EmptyStateView: View {
                     .font(.system(size: 28, weight: .medium))
                     .foregroundStyle(Theme.Colors.accent)
             }
+            .scaleEffect(isVisible ? 1 : 0.85)
+            .opacity(isVisible ? 1 : 0)
 
             VStack(spacing: Theme.Spacing.sm) {
                 Text(title)
@@ -32,13 +36,21 @@ struct EmptyStateView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 360)
             }
+            .offset(y: isVisible ? 0 : 8)
+            .opacity(isVisible ? 1 : 0)
 
             if let actionTitle, let action {
                 ROLAButton(title: actionTitle, style: .secondary, action: action)
                     .frame(maxWidth: 200)
+                    .opacity(isVisible ? 1 : 0)
             }
         }
         .padding(Theme.Spacing.xl)
+        .onAppear {
+            withAnimation(Theme.Motion.slow) {
+                isVisible = true
+            }
+        }
     }
 }
 

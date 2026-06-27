@@ -85,4 +85,13 @@ enum PermissionStatus: Equatable {
     case granted
     case denied
     case restricted
+
+    var title: String {
+        switch self {
+        case .notDetermined: "Not determined"
+        case .granted: "Granted"
+        case .denied: "Denied"
+        case .restricted: "Restricted"
+        }
+    }
 }

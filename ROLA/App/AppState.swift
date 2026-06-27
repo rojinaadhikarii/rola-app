@@ -1,7 +1,6 @@
+import AppKit
 import Foundation
 import SwiftUI
-
-// MARK: - Import Phase
 
 enum ImportPhase: Equatable {
     case importingMessages
@@ -79,6 +78,18 @@ final class AppState {
 
     var learningService: LearningService {
         container.learningService
+    }
+
+    var inboxMonitor: InboxMonitor {
+        container.inboxMonitor
+    }
+
+    var notificationScheduler: NotificationScheduler {
+        container.notificationScheduler
+    }
+
+    var notificationPreferencesStore: NotificationPreferencesStoreProtocol {
+        container.notificationPreferencesStore
     }
 
     // MARK: Init
@@ -183,6 +194,31 @@ final class AppState {
             await styleProfileStore.analyze()
         }
         await calendarContextStore.refresh()
+        await evaluateInboxNotifications()
+    }
+
+    func evaluateInboxNotifications() async {
+        await inboxMonitor.evaluate(
+            conversations: conversationStore.conversations,
+            isAppActive: NSApplication.shared.isActive
+        )
+    }
+
+    func openConversationFromNotification(chatId: Int64) async {
+        withAnimation(Theme.Motion.standard) {
+            route = .dashboard
+        }
+
+        guard let conversation = conversationStore.conversations.first(where: { $0.id == chatId }) else {
+            await conversationStore.refresh()
+            guard let refreshed = conversationStore.conversations.first(where: { $0.id == chatId }) else {
+                return
+            }
+            await conversationStore.selectConversation(refreshed)
+            return
+        }
+
+        await conversationStore.selectConversation(conversation)
     }
 
     /// Skip import but still complete onboarding (for testing).

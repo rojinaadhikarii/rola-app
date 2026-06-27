@@ -42,6 +42,7 @@ struct ConversationRow: View {
                         Circle()
                             .fill(Theme.Colors.accent)
                             .frame(width: 8, height: 8)
+                            .modifier(PulseModifier())
                     }
                 }
             }
@@ -54,6 +55,21 @@ struct ConversationRow: View {
                 RoundedRectangle(cornerRadius: Theme.Radius.lg, style: .continuous)
                     .stroke(Theme.Colors.border, lineWidth: 1)
             }
+        }
+        .animation(Theme.Motion.fast, value: isSelected)
+    }
+
+    // MARK: - Pulse
+
+    private struct PulseModifier: ViewModifier {
+        @State private var isPulsing = false
+
+        func body(content: Content) -> some View {
+            content
+                .scaleEffect(isPulsing ? 1.2 : 0.9)
+                .opacity(isPulsing ? 1 : 0.7)
+                .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: isPulsing)
+                .onAppear { isPulsing = true }
         }
     }
 

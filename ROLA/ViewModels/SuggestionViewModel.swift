@@ -17,6 +17,7 @@ final class SuggestionViewModel {
     var currentConversation: Conversation?
     var isGenerating = false
     var errorMessage: String?
+    var onReplyCopied: (() -> Void)?
 
     init(
         aiPipeline: AIPipelineProtocol,
@@ -108,6 +109,7 @@ final class SuggestionViewModel {
 
         aiPipeline.approveSuggestion(suggestion, editedText: nil)
         copyToClipboard(suggestion.displayText)
+        onReplyCopied?()
         refreshCurrentSuggestion()
 
         Task {
@@ -127,6 +129,7 @@ final class SuggestionViewModel {
 
         aiPipeline.approveSuggestion(suggestion, editedText: editedText)
         copyToClipboard(editedText)
+        onReplyCopied?()
         refreshCurrentSuggestion()
 
         Task {

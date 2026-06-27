@@ -404,6 +404,32 @@ final class ROLATests: XCTestCase {
         XCTAssertGreaterThan(store.globalProfile?.traits.messageCount ?? 0, originalCount)
     }
 
+    func testInboxHealthLevels() {
+        XCTAssertEqual(InboxHealth(needsReplyCount: 0, totalCount: 10), .excellent)
+        XCTAssertEqual(InboxHealth(needsReplyCount: 2, totalCount: 10), .good)
+        XCTAssertEqual(InboxHealth(needsReplyCount: 4, totalCount: 10), .attention)
+        XCTAssertEqual(InboxHealth(needsReplyCount: 8, totalCount: 10), .overloaded)
+    }
+
+    func testNotificationPreferencesRoundTrip() {
+        let store = NotificationPreferencesStore()
+        var preferences = NotificationPreferences.default
+        preferences.isEnabled = false
+        store.save(preferences)
+        XCTAssertFalse(store.load().isEnabled)
+    }
+
+    @MainActor
+    func testInboxMonitorSkipsInitialNotificationBatch() async {
+        let monitor = InboxMonitor(scheduler: NotificationScheduler())
+        let conversations = MockConversationData.sample
+
+        await monitor.evaluate(conversations: conversations, isAppActive: false)
+        await monitor.evaluate(conversations: conversations, isAppActive: false)
+
+        XCTAssertEqual(monitor.inboxHealth(for: conversations), .good)
+    }
+
     private func fixturePathInRepo() -> String {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

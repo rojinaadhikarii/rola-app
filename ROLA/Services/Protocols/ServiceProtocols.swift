@@ -44,6 +44,7 @@ protocol NotificationServiceProtocol: AnyObject {
     func requestAccess() async -> PermissionStatus
     func authorizationStatus() -> PermissionStatus
     func refreshAuthorizationStatus() async -> PermissionStatus
+    func sendTestNotification() async throws
 }
 
 @MainActor
@@ -76,6 +77,9 @@ protocol DependencyContainerProtocol: AnyObject {
     var feedbackStore: FeedbackStore { get }
     var syncService: SyncService { get }
     var learningService: LearningService { get }
+    var inboxMonitor: InboxMonitor { get }
+    var notificationScheduler: NotificationScheduler { get }
+    var notificationPreferencesStore: NotificationPreferencesStoreProtocol { get }
     var calendarService: CalendarServiceProtocol { get }
     var contactsService: ContactsServiceProtocol { get }
     var notificationService: NotificationServiceProtocol { get }

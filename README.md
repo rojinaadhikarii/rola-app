@@ -16,6 +16,16 @@ ROLA helps you stay connected by reducing the mental burden of replying to every
 2. Open `ROLA.xcodeproj` in Xcode
 3. Select the **ROLA** scheme and press **⌘R** to run
 
+## Milestone 8 — What's Included
+
+- **Native notifications** — macOS alerts when new messages need a reply (deduplicated, rate-limited)
+- **Inbox monitor** — watches conversation store and schedules notifications when app is inactive
+- **Notification delegate** — tap a notification to open the conversation in ROLA
+- **Inbox health ring** — animated dashboard indicator for inbox status
+- **Toast banner** — confirmation when a reply is copied to clipboard
+- **UI polish** — shimmer loading skeletons, empty state animations, list transitions
+- **Settings** — notification preferences, permission request, test notification
+
 ## Milestone 7 — What's Included
 
 - **Learning loop** — approved/edited replies incrementally update global and per-contact style profiles
@@ -120,8 +130,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system design.
 | M4 — Style analysis | ✅ Complete |
 | M5 — Calendar integration | ✅ Complete |
 | M6 — AI pipeline | ✅ Complete |
-| M7 — Learning + Supabase | ✅ Current |
-| M8 — Polish + notifications | Planned |
+| M7 — Learning + Supabase | ✅ Complete |
+| M8 — Polish + notifications | ✅ Current |
 
 ## Regenerating the Xcode Project
 

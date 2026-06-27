@@ -6,6 +6,7 @@ struct DashboardView: View {
     @Environment(AppState.self) private var appState
     @State private var viewModel: DashboardViewModel?
     @State private var suggestionViewModel: SuggestionViewModel?
+    @State private var showCopiedToast = false
 
     var body: some View {
         @Bindable var conversationStore = appState.conversationStore
@@ -22,6 +23,11 @@ struct DashboardView: View {
                 dashboardContent(viewModel: viewModel)
             }
         }
+        .toast(
+            isPresented: $showCopiedToast,
+            message: "Copied to clipboard — paste in Messages",
+            systemImage: "doc.on.doc.fill"
+        )
         .onAppear {
             if viewModel == nil {
                 viewModel = DashboardViewModel(
@@ -30,17 +36,27 @@ struct DashboardView: View {
                     calendarContextStore: calendarStore,
                     suggestionStore: appState.suggestionStore
                 )
-                suggestionViewModel = SuggestionViewModel(
+                let suggestions = SuggestionViewModel(
                     aiPipeline: appState.aiPipeline,
                     learningService: appState.learningService,
                     suggestionStore: appState.suggestionStore,
                     styleProfileStore: styleStore,
                     calendarContextStore: calendarStore
                 )
-                Task { await calendarStore.refresh() }
+                suggestions.onReplyCopied = { showCopiedToast = true }
+                suggestionViewModel = suggestions
+                Task {
+                    await calendarStore.refresh()
+                    await appState.evaluateInboxNotifications()
+                }
             }
         }
-        .onChange(of: conversationStore.conversations.count) { _, _ in }
+        .onChange(of: conversationStore.conversations.count) { _, _ in
+            Task { await appState.evaluateInboxNotifications() }
+        }
+        .onChange(of: conversationStore.needsAttention.count) { _, _ in
+            Task { await appState.evaluateInboxNotifications() }
+        }
         .onChange(of: styleStore.hasProfile) { _, _ in }
         .onChange(of: calendarStore.context?.fetchedAt) { _, _ in }
         .onChange(of: conversationStore.selectedConversation?.id) { _, newId in
@@ -97,16 +113,18 @@ struct DashboardView: View {
     }
 
     private func dashboardHeader(viewModel: DashboardViewModel) -> some View {
-        HStack {
+        let health = appState.inboxMonitor.inboxHealth(for: viewModel.conversations)
+
+        return HStack {
             HStack(spacing: Theme.Spacing.md) {
-                ROLALogoMark(size: 28)
+                InboxHealthRing(health: health, size: 36)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("ROLA")
                         .font(Theme.Typography.headline)
                         .foregroundStyle(Theme.Colors.textPrimary)
 
-                    Text("Relationship Copilot")
+                    Text(health.title)
                         .font(Theme.Typography.caption)
                         .foregroundStyle(Theme.Colors.textTertiary)
                 }
@@ -134,7 +152,10 @@ struct DashboardView: View {
                 )
 
                 ROLAIconButton(systemImage: "arrow.clockwise") {
-                    Task { await viewModel.refresh() }
+                    Task {
+                        await viewModel.refresh()
+                        await appState.evaluateInboxNotifications()
+                    }
                 }
 
                 ROLAIconButton(systemImage: "gearshape") {
@@ -196,13 +217,16 @@ struct DashboardView: View {
             } else {
                 conversationList(viewModel: viewModel)
                     .frame(width: 300)
+                    .transition(.opacity.combined(with: .move(edge: .leading)))
 
                 Divider()
                     .background(Theme.Colors.borderSubtle)
 
                 detailPane(viewModel: viewModel)
+                    .transition(.opacity.combined(with: .move(edge: .trailing)))
             }
         }
+        .animation(Theme.Motion.standard, value: viewModel.selectedFilter)
     }
 
     private func sidebar(viewModel: DashboardViewModel) -> some View {
@@ -275,11 +299,21 @@ struct DashboardView: View {
         .buttonStyle(.plain)
         .disabled(!isEnabled && !isSelected)
         .opacity(isEnabled || isSelected ? 1 : 0.45)
+        .animation(Theme.Motion.fast, value: isSelected)
     }
 
     private func conversationList(viewModel: DashboardViewModel) -> some View {
         Group {
-            if viewModel.filteredConversations.isEmpty {
+            if appState.conversationStore.isImporting && viewModel.conversations.isEmpty {
+                ScrollView {
+                    LazyVStack(spacing: Theme.Spacing.xs) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            ConversationRowSkeleton()
+                        }
+                    }
+                    .padding(Theme.Spacing.sm)
+                }
+            } else if viewModel.filteredConversations.isEmpty {
                 emptyListState(viewModel: viewModel)
             } else {
                 ScrollView {
@@ -296,9 +330,11 @@ struct DashboardView: View {
                                 )
                             }
                             .buttonStyle(.plain)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
                     }
                     .padding(Theme.Spacing.sm)
+                    .animation(Theme.Motion.standard, value: viewModel.filteredConversations.map(\.id))
                 }
             }
         }
@@ -464,30 +500,41 @@ struct DashboardView: View {
 
     @ViewBuilder
     private func emptyListState(viewModel: DashboardViewModel) -> some View {
-        if viewModel.conversations.isEmpty {
-            VStack(spacing: Theme.Spacing.md) {
-                Image(systemName: "tray")
-                    .font(.system(size: 24))
-                    .foregroundStyle(Theme.Colors.textTertiary)
-                Text("No conversations")
-                    .font(Theme.Typography.callout)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-            }
+        switch viewModel.selectedFilter {
+        case .suggestions:
+            EmptyStateView(
+                systemImage: "sparkles",
+                title: "No pending suggestions",
+                message: "Open a conversation that needs a reply to generate AI suggestions."
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            VStack(spacing: Theme.Spacing.md) {
-                Image(systemName: "checkmark.circle")
-                    .font(.system(size: 24))
-                    .foregroundStyle(Theme.Colors.success)
-                Text("All caught up")
-                    .font(Theme.Typography.callout)
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                Text("No messages need your attention right now.")
-                    .font(Theme.Typography.caption)
-                    .foregroundStyle(Theme.Colors.textTertiary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Theme.Spacing.md)
-            }
+        case .followUps:
+            EmptyStateView(
+                systemImage: "clock.arrow.circlepath",
+                title: "Follow-ups coming soon",
+                message: "ROLA will remind you about conversations that went quiet."
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .needsAttention where viewModel.conversations.isEmpty:
+            EmptyStateView(
+                systemImage: "tray",
+                title: "No conversations",
+                message: "Import your iMessage history to get started."
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .needsAttention, .all:
+            EmptyStateView(
+                systemImage: "checkmark.circle",
+                title: "All caught up",
+                message: "No messages need your attention right now."
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        default:
+            EmptyStateView(
+                systemImage: "tray",
+                title: "Nothing here",
+                message: "Try another filter or refresh your inbox."
+            )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }

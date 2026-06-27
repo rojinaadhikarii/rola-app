@@ -308,6 +308,7 @@ final class MockNotificationService: NotificationServiceProtocol {
     func requestAccess() async -> PermissionStatus { .notDetermined }
     func authorizationStatus() -> PermissionStatus { .notDetermined }
     func refreshAuthorizationStatus() async -> PermissionStatus { .notDetermined }
+    func sendTestNotification() async throws {}
 }
 
 // MARK: - Keychain API Key Store

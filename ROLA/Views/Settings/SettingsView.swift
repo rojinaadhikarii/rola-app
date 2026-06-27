@@ -18,6 +18,11 @@ struct SettingsView: View {
     @State private var cloudMessageIsError: Bool = false
     @State private var isCloudBusy: Bool = false
 
+    @State private var notificationPreferences = NotificationPreferences.default
+    @State private var notificationMessage: String?
+    @State private var notificationMessageIsError: Bool = false
+    @State private var isNotificationBusy: Bool = false
+
     private var apiKeyStore: APIKeyStoreProtocol {
         appState.container.apiKeyStore
     }
@@ -34,6 +39,7 @@ struct SettingsView: View {
                     messagesSection
                     styleSection
                     calendarSection
+                    notificationsSection
                     cloudSyncSection
                     apiKeySection
                     aboutSection
@@ -46,6 +52,7 @@ struct SettingsView: View {
         .onAppear {
             loadExistingKey()
             loadSupabaseConfig()
+            notificationPreferences = appState.notificationPreferencesStore.load()
         }
     }
 
@@ -210,6 +217,68 @@ struct SettingsView: View {
                 }
             }
             .frame(maxWidth: 240)
+        }
+        .padding(Theme.Spacing.lg)
+        .rolaCard()
+    }
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            sectionTitle("Notifications")
+
+            Text("Get notified when new messages need your reply. ROLA never auto-sends — notifications are reminders only.")
+                .font(Theme.Typography.callout)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Toggle("Enable notifications", isOn: $notificationPreferences.isEnabled)
+                .toggleStyle(.switch)
+                .onChange(of: notificationPreferences.isEnabled) { _, _ in
+                    saveNotificationPreferences()
+                }
+
+            Toggle("Notify on new needs-reply", isOn: $notificationPreferences.notifyOnNewNeedsReply)
+                .toggleStyle(.switch)
+                .disabled(!notificationPreferences.isEnabled)
+                .onChange(of: notificationPreferences.notifyOnNewNeedsReply) { _, _ in
+                    saveNotificationPreferences()
+                }
+
+            HStack {
+                Text("Permission")
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                Spacer()
+                Text(appState.container.permissionManager.status(for: .notifications).title)
+                    .font(Theme.Typography.callout)
+                    .foregroundStyle(Theme.Colors.textPrimary)
+            }
+
+            HStack(spacing: Theme.Spacing.sm) {
+                ROLAButton(
+                    title: "Request Access",
+                    style: .secondary,
+                    isLoading: isNotificationBusy
+                ) {
+                    Task { await requestNotificationAccess() }
+                }
+                .frame(maxWidth: 150)
+
+                ROLAButton(
+                    title: "Send Test",
+                    style: .secondary,
+                    isLoading: isNotificationBusy
+                ) {
+                    Task { await sendTestNotification() }
+                }
+                .frame(maxWidth: 120)
+            }
+
+            if let notificationMessage {
+                Text(notificationMessage)
+                    .font(Theme.Typography.caption)
+                    .foregroundStyle(notificationMessageIsError ? Theme.Colors.error : Theme.Colors.success)
+            }
         }
         .padding(Theme.Spacing.lg)
         .rolaCard()
@@ -399,7 +468,7 @@ struct SettingsView: View {
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 Spacer()
-                Text("0.7.0 (Milestone 7)")
+                Text("0.8.0 (Milestone 8)")
                     .font(Theme.Typography.callout)
                     .foregroundStyle(Theme.Colors.textPrimary)
             }
@@ -529,6 +598,36 @@ struct SettingsView: View {
     private func showCloudMessage(_ message: String, isError: Bool) {
         cloudMessage = message
         cloudMessageIsError = isError
+    }
+
+    private func saveNotificationPreferences() {
+        appState.notificationPreferencesStore.save(notificationPreferences)
+    }
+
+    private func requestNotificationAccess() async {
+        isNotificationBusy = true
+        defer { isNotificationBusy = false }
+        let status = await appState.container.permissionManager.request(.notifications)
+        showNotificationMessage(
+            status == .granted ? "Notification permission granted." : "Notification permission not granted.",
+            isError: status != .granted
+        )
+    }
+
+    private func sendTestNotification() async {
+        isNotificationBusy = true
+        defer { isNotificationBusy = false }
+        do {
+            try await appState.container.notificationService.sendTestNotification()
+            showNotificationMessage("Test notification sent.", isError: false)
+        } catch {
+            showNotificationMessage(error.localizedDescription, isError: true)
+        }
+    }
+
+    private func showNotificationMessage(_ message: String, isError: Bool) {
+        notificationMessage = message
+        notificationMessageIsError = isError
     }
 }
 
