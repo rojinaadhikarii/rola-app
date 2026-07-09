@@ -62,6 +62,7 @@ swift_files = [
     "ROLA/AI/Prompts/PromptBuilder.swift",
     "ROLA/AI/Pipeline/AIPipeline.swift",
     "ROLA/Permissions/FullDiskAccessChecker.swift",
+    "ROLA/Permissions/PermissionManager.swift",
     "ROLA/Permissions/SystemSettingsURLs.swift",
     "ROLA/ViewModels/OnboardingViewModel.swift",
     "ROLA/ViewModels/DashboardViewModel.swift",
@@ -249,10 +250,11 @@ def group_block(gid, name, children, path=None):
 
 out.append("\n/* Begin PBXGroup section */")
 
-# Leaf groups with files
-onboarding_children = [file_refs[f] for f in swift_files if "Onboarding" in f]
-dashboard_children = [file_refs[f] for f in swift_files if "Dashboard" in f]
-settings_children = [file_refs[f] for f in swift_files if "Settings" in f]
+# Leaf groups with files — use directory paths, not loose substring matches
+# (e.g. "Settings" must not match SystemSettingsURLs.swift)
+onboarding_children = [file_refs[f] for f in swift_files if "/Views/Onboarding/" in f]
+dashboard_children = [file_refs[f] for f in swift_files if "/Views/Dashboard/" in f]
+settings_children = [file_refs[f] for f in swift_files if "/Views/Settings/" in f]
 app_children = [file_refs[f] for f in swift_files if "/App/" in f]
 models_children = [file_refs[f] for f in swift_files if "/Models/" in f]
 utils_children = [file_refs[f] for f in swift_files if "/Utilities/" in f]
