@@ -224,7 +224,7 @@ final class MockCalendarService: CalendarServiceProtocol {
     }
 
     func isAvailable(from start: Date, to end: Date) async -> Bool {
-        let context = try await fetchContext()
+        guard let context = try? await fetchContext() else { return true }
         return AvailabilityChecker.isAvailable(from: start, to: end, on: context.today)
     }
 }

@@ -1,4 +1,4 @@
-import AppKit
+@preconcurrency import AppKit
 import Foundation
 
 // MARK: - Permission Refresh Observer
@@ -9,7 +9,8 @@ final class PermissionRefreshObserver {
 
     var onRefresh: (@MainActor () -> Void)?
 
-  private var observer: NSObjectProtocol?
+    /// Observer token is managed by NotificationCenter; marked unsafe for deinit cleanup.
+    private nonisolated(unsafe) var observer: NSObjectProtocol?
 
     init() {
         observer = NotificationCenter.default.addObserver(
