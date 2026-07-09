@@ -4,13 +4,12 @@ import Foundation
 // MARK: - Permission Refresh Observer
 
 /// Refreshes permission state when the user returns from System Settings.
-@MainActor
 final class PermissionRefreshObserver {
 
-    var onRefresh: (@MainActor () -> Void)?
+    private let observer: NSObjectProtocol
 
-    /// Observer token is managed by NotificationCenter; marked unsafe for deinit cleanup.
-    private nonisolated(unsafe) var observer: NSObjectProtocol?
+    /// Called on the main queue when the app becomes active.
+    var onRefresh: (() -> Void)?
 
     init() {
         observer = NotificationCenter.default.addObserver(
@@ -18,15 +17,11 @@ final class PermissionRefreshObserver {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in
-                self?.onRefresh?()
-            }
+            self?.onRefresh?()
         }
     }
 
     deinit {
-        if let observer {
-            NotificationCenter.default.removeObserver(observer)
-        }
+        NotificationCenter.default.removeObserver(observer)
     }
 }

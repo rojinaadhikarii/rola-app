@@ -563,6 +563,7 @@ out.extend(config_block(release_project, "Release", project_release))
 target_debug = [
     "ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;",
     "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;",
+    "CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;",
     "CODE_SIGN_ENTITLEMENTS = ROLA/ROLA.entitlements;",
     "CODE_SIGN_STYLE = Automatic;",
     "COMBINE_HIDPI_IMAGES = YES;",
